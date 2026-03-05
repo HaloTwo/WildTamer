@@ -63,6 +63,11 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 5322174957039109674}
   m_SourcePrefab: {fileID: 100100000, guid: 7d908ba845b1044e6829ed5fb7c4be10, type: 3}
+--- !u!4 &3798519161922371585 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4000011044399452, guid: 7d908ba845b1044e6829ed5fb7c4be10, type: 3}
+  m_PrefabInstance: {fileID: 3799130365239748957}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &3799548736749231111 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1000013261649242, guid: 7d908ba845b1044e6829ed5fb7c4be10, type: 3}
@@ -107,5 +112,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9ac107b24e8a35247b59a8926942f9a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMover2D
-  speed: 5
+  speed: 1
   deadZone: 0.15
+  flipRoot: {fileID: 3798519161922371585}
