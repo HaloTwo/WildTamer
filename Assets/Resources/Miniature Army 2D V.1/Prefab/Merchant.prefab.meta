@@ -1,15 +1,8 @@
 fileFormatVersion: 2
-guid: 7d908ba845b1044e6829ed5fb7c4be10
+guid: 74d7ec96dc28ee34895ff52b1714d71f
 timeCreated: 1475410451
 licenseType: Store
 NativeFormatImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 72935
-  packageName: 'Miniature Army 2D V.1 [Medieval Style]'
-  packageVersion: 1.0
-  assetPath: Assets/Miniature Army 2D V.1/Prefab/Merchant.prefab
-  uploadId: 202860
