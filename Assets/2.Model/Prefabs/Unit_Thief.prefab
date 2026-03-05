@@ -52,9 +52,17 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5660600815793033870, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: moveSpeed
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7695309065870355487, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: anim
+      value: 
+      objectReference: {fileID: 2587217346583820393}
     - target: {fileID: 7695309065870355487, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
       propertyPath: maxHP
-      value: 70
+      value: 50
       objectReference: {fileID: 0}
     - target: {fileID: 7695309065870355487, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
       propertyPath: damage
@@ -62,7 +70,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7695309065870355487, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
       propertyPath: attackRange
-      value: 3
+      value: 2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:
@@ -170,5 +178,10 @@ MonoBehaviour:
 --- !u!4 &2501771051268384375 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4000013306724104, guid: 13c470c5b8dcd4854834911f7e0a9a6c, type: 3}
+  m_PrefabInstance: {fileID: 2501228946466232703}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &2587217346583820393 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 95000010572177686, guid: 13c470c5b8dcd4854834911f7e0a9a6c, type: 3}
   m_PrefabInstance: {fileID: 2501228946466232703}
   m_PrefabAsset: {fileID: 0}

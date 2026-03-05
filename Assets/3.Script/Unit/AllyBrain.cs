@@ -3,6 +3,8 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D))]
 public class AllyBrain : MonoBehaviour
 {
+    PlayerMover2D playerMover;
+
     CombatAgent combat;
     Rigidbody2D rb;
     Animator anim;
@@ -16,22 +18,39 @@ public class AllyBrain : MonoBehaviour
     [Header("Move")]
     [SerializeField] float moveSpeed = 3.25f;
     [SerializeField] float regroupDistance = 6.0f;
-    float idleHoldRadius = 2.5f; 
+
+    [Header("Idle")]
+    float idleHoldRadius = 1.25f; // leader 주변 이 안이면 "정렬 강요 없이" 정지
 
     [Header("Scan")]
     [SerializeField] float scanInterval = 0.2f;
-    [SerializeField] float detectRadius = 5.0f; 
+    float detectRadius = 3.5f;
     float nextScanTime;
 
-    [Header("Smooth")]
+    [Header("Arrive (ToPoint)")]
     [SerializeField] float slowRadius = 1.2f;
-    [SerializeField] float stopRadius = 0.25f; // ★ 0.15 너무 빡셈. 제자리걸음/밀림 줄이려고 올림
+    [SerializeField] float stopRadius = 0.25f;
 
-    Vector2 desiredMove;
+    [Header("Avoid (Leader)")]
+    [SerializeField] float leaderAvoidRadius = 0.9f;
+    [SerializeField] float leaderAvoidStrength = 1.2f;
+    [SerializeField] float leaderYieldStrength = 1.6f; // 좌우 비키기
+
+    [Header("Separation (Allies)")]
+    [SerializeField] float allySeparationRadius = 0.6f;
+    [SerializeField] float allySeparationStrength = 1.0f;
+
+    [Header("Combat")]
+    [SerializeField] float combatRepathInterval = 0.12f; // 전투 슬롯 재선정 텀(너무 자주 바꾸면 지터)
+    float nextCombatRepathTime;
+    Vector2 combatSlotWorld; // 목표 슬롯
+
+
+    Vector2 desired;
+    bool desiredIsDirection;
+
     float facing = 1f;
     const string isMovingParam = "IsMoving";
-
-    [SerializeField] PlayerMover2D playerMover;
 
     public void FirstBrainSet(CombatAgent combatAgent, Animator animator, Rigidbody2D rigidbody2D)
     {
@@ -40,20 +59,17 @@ public class AllyBrain : MonoBehaviour
         rb = rigidbody2D;
     }
 
-    // 테이밍 전환에서 호출
     public void SetupAsAlly(Transform leaderTr)
     {
         leader = leaderTr;
         enabled = true;
         currentTarget = null;
 
-        combat.SetTeam(CombatAgent.Team.Ally);
+        if (combat != null) combat.SetTeam(CombatAgent.Team.Ally);
 
-        if (playerMover == null && leader != null)
-            playerMover = leader.GetComponent<PlayerMover2D>();
+        if (playerMover == null && leader != null) playerMover = leader.GetComponent<PlayerMover2D>();
     }
 
-    // 스쿼드 등록 시 주입
     public void SetFormation(PlayerSquadController squadController, int index)
     {
         squad = squadController;
@@ -62,6 +78,9 @@ public class AllyBrain : MonoBehaviour
 
     public void SetIndex(int index) => myIndex = index;
 
+    // PlayerSquadController 점유체크에서 사용
+    public Vector2 GetPosition2D() => (rb != null) ? rb.position : (Vector2)transform.position;
+
     void Update()
     {
         if (combat == null || combat.IsDead) return;
@@ -69,64 +88,56 @@ public class AllyBrain : MonoBehaviour
         if (leader == null) return;
         if (squad == null || myIndex < 0) return;
 
-        // --- 튜닝값 ---
-        float leaderAvoidRadius = 0.9f;
-        float leaderAvoidStrength = 1.2f;
-
-        float engageRadius = combat.AttackRange * 2.5f;
-        float engageRadius2 = engageRadius * engageRadius;
-
-        float rallyForward = 0.9f;
-        // -------------
-
-        desiredMove = Vector2.zero;
-
         Vector2 myPos = rb.position;
         Vector2 leaderPos = leader.position;
 
-        // 플레이어 입력 기반 그룹 이동
+        // 리더 입력 (deadZone 동일하게)
         Vector2 inputDir = (playerMover != null) ? playerMover.MoveInput : Vector2.zero;
-
-        const float inputDead = 0.15f; // PlayerMover2D deadZone과 동일하게
+        const float inputDead = 0.15f;
         bool leaderMoving = inputDir.sqrMagnitude > (inputDead * inputDead);
         Vector2 leaderFwd = leaderMoving ? inputDir.normalized : Vector2.zero;
 
-        float leaderDist = Vector2.Distance(transform.position, leader.position);
+        desired = Vector2.zero;
+        desiredIsDirection = false;
 
-        // 1) 너무 멀면 무조건 복귀 (이게 최우선)
+        // 1) 너무 멀면 "복귀 우선" (전투 취소)
+        float leaderDist = Vector2.Distance(myPos, leaderPos);
         if (leaderDist > regroupDistance)
         {
             currentTarget = null;
 
             if (leaderMoving)
             {
-                desiredMove = leaderFwd;
+                // 그룹 방향으로 같이 이동 (앞쪽이면 속도 줄여서 역돌진 방지)
+                desired = leaderFwd;
+                desiredIsDirection = true;
 
                 Vector2 toMe = myPos - leaderPos;
-                float front = Vector2.Dot(toMe, desiredMove);
+                float front = Vector2.Dot(toMe, desired);
                 if (front > 0.15f)
-                    desiredMove *= 0.2f;
+                    desired *= 0.25f;
             }
             else
             {
-                // 멀고, 플레이어도 안 움직이면 → 링/슬롯으로 천천히 복귀
-                Vector2 slotPos = squad.GetRingWorldPos(myIndex);
-                desiredMove = slotPos - myPos;
+                Vector2 idlePos = squad.GetIdleRingWorldPos(myIndex);
+                desired = idlePos - myPos;
+                desiredIsDirection = false;
             }
 
-            desiredMove += GetLeaderAvoid(myPos, leaderPos, leaderFwd, leaderAvoidRadius, leaderAvoidStrength);
-            ApplyAnimAndFlip(desiredMove);
+            desired += GetLeaderAvoid(myPos, leaderPos, leaderFwd);
+            desired += GetAllySeparation(myPos);
+            ApplyAnimAndFlip(desired);
             return;
         }
 
-        // 2) 타겟 갱신 (leader가 멈춰도 항상 돌아야 함)
+        // 2) 타겟 갱신 (항상 돌아감)
         if (Time.time >= nextScanTime && (!currentTarget || !currentTarget.gameObject.activeInHierarchy))
         {
             nextScanTime = Time.time + scanInterval;
-            currentTarget = FindClosestEnemyAroundLeader_NoOverlap(); // 내부에서 detectRadius 사용하게 바꿀거임
+            currentTarget = FindClosestEnemyAroundLeader_NoOverlap(leaderPos);
         }
 
-        // 3) 전투: 타겟 있으면 무조건 추적/공격 (leaderMoving 여부랑 무관)
+        // 3) 전투: 타겟 있으면 "둘러싸기 슬롯"으로 이동 후 사정거리에서 공격
         if (currentTarget && currentTarget.gameObject.activeInHierarchy)
         {
             var enemy = currentTarget.GetComponentInParent<CombatAgent>();
@@ -136,160 +147,124 @@ public class AllyBrain : MonoBehaviour
             }
             else
             {
-                // 사정거리까지 다다닥
-                if (!combat.IsInRange(currentTarget))
-                    desiredMove = (Vector2)currentTarget.position - myPos;
+                // 슬롯 목표점 재계산(너무 자주 바꾸면 덜덜 떠서 interval)
+                if (Time.time >= nextCombatRepathTime)
+                {
+                    nextCombatRepathTime = Time.time + combatRepathInterval;
+                    combatSlotWorld = squad.GetCombatSlotWorldPos(currentTarget, myIndex, combat.AttackRange, myPos);
+                }
+
+                bool inAttack = combat.IsInRange(currentTarget);
+
+                if (!inAttack)
+                {
+                    desired = combatSlotWorld - myPos;   // 타겟 "본체"가 아니라 슬롯으로 접근
+                    desiredIsDirection = false;
+                }
                 else
+                {
+                    // 공격 중엔 밀기 줄이려고 이동은 멈추는 편이 훨씬 안정적
                     combat.TryAttack(currentTarget);
+                    desired = Vector2.zero;
+                    desiredIsDirection = false;
+                }
 
-                desiredMove += GetLeaderAvoid(myPos, leaderPos, leaderFwd, leaderAvoidRadius, leaderAvoidStrength);
-                ApplyAnimAndFlip(desiredMove);
+                desired += GetAllySeparation(myPos);         // 서로 겹침/밀기 최소화
+                desired += GetLeaderAvoid(myPos, leaderPos, leaderFwd); // 플레이어 길막도 최소화
+                ApplyAnimAndFlip(desired);
                 return;
             }
         }
 
-        // 플레이어가 멈췄고, 내 위치가 leader 주변 hold 안이면 완전 정지
-        if (!leaderMoving)
-        {
-            float hold2 = idleHoldRadius * idleHoldRadius;
-            if ((myPos - leaderPos).sqrMagnitude <= hold2)
-            {
-                desiredMove = Vector2.zero;
-                rb.linearVelocity = Vector2.zero; // ★ 즉시 정지
-                ApplyAnimAndFlip(Vector2.zero);
-                return;
-            }
-
-            // hold 밖이면 자리 잡으러만 이동 (링/슬롯)
-            Vector2 targetPos = squad.GetRingWorldPos(myIndex);
-            desiredMove = targetPos - myPos;
-
-            desiredMove += GetLeaderAvoid(myPos, leaderPos, leaderFwd, leaderAvoidRadius, leaderAvoidStrength);
-            ApplyAnimAndFlip(desiredMove);
-            return;
-        }
-
-        // 5) 타겟 없으면: 그룹 이동 or 링 정렬
+        // 4) 타겟 없으면: leaderMoving이면 그룹 이동 / 아니면 hold 안이면 정지, 밖이면 idle 링으로
         if (leaderMoving)
         {
-            desiredMove = leaderFwd;
+            desired = leaderFwd;
+            desiredIsDirection = true;
 
-            // 내가 플레이어 앞에 있으면 속도 줄이기(역돌진 방지)
             Vector2 toMe = myPos - leaderPos;
             float front = Vector2.Dot(toMe, leaderFwd);
             if (front > 0.15f)
-                desiredMove *= 0.2f;
+                desired *= 0.25f;
         }
         else
         {
-            // 멈췄을 때만 링 정렬 (hold 로직이 위에서 걸러져야 함)
-            Vector2 ringPos = squad.GetRingWorldPos(myIndex);
-            desiredMove = ringPos - myPos;
+            float hold2 = idleHoldRadius * idleHoldRadius;
+
+            if ((myPos - leaderPos).sqrMagnitude <= hold2)
+            {
+                desired = Vector2.zero;
+                desiredIsDirection = false;
+            }
+            else
+            {
+                Vector2 idlePos = squad.GetIdleRingWorldPos(myIndex);
+                desired = idlePos - myPos;
+                desiredIsDirection = false;
+            }
         }
 
-        // 6) 플레이어 근접 비키기 (좌우 yield 포함)
-        desiredMove += GetLeaderAvoid(myPos, leaderPos, leaderFwd, leaderAvoidRadius, leaderAvoidStrength);
-        ApplyAnimAndFlip(desiredMove);
-    }
-
-    // 플레이어 근접 회피: 방사형(push) + 측면(yield)
-    Vector2 GetLeaderAvoid(Vector2 myPos, Vector2 leaderPos, Vector2 leaderFwd, float radius, float strength)
-    {
-        Vector2 v = myPos - leaderPos;
-        float d2 = v.sqrMagnitude;
-        float r2 = radius * radius;
-
-        if (d2 >= r2 || d2 < 0.000001f) return Vector2.zero;
-
-        float d = Mathf.Sqrt(d2);
-        float t = 1f - (d / radius); // 가까울수록 1
-
-        Vector2 push = v.normalized * (strength * t);
-
-        if (leaderFwd.sqrMagnitude > 0.0001f)
-        {
-            leaderFwd.Normalize();
-            Vector2 right = new Vector2(leaderFwd.y, -leaderFwd.x);
-
-            // ★ 둘이 같은 쪽으로 몰리면 여기 side를 인덱스로 고정해라
-            // float side = (myIndex % 2 == 0) ? -1f : +1f;
-
-            float side = Mathf.Sign(Vector2.Dot(v, right));
-            if (side == 0f) side = 1f;
-
-            Vector2 yield = right * side * (strength * 1.6f * t);
-            return push + yield;
-        }
-
-        return push;
+        desired += GetAllySeparation(myPos);
+        desired += GetLeaderAvoid(myPos, leaderPos, leaderFwd);
+        ApplyAnimAndFlip(desired);
     }
 
     void FixedUpdate()
     {
         if (rb == null) return;
 
-        Vector2 inputDir = (playerMover != null) ? playerMover.MoveInput : Vector2.zero;
-        bool leaderMoving = inputDir.sqrMagnitude > 0.0001f;
-
-        if (leaderMoving)
-        {
-            if (desiredMove.sqrMagnitude < 0.0001f)
-            {
-                rb.linearVelocity = Vector2.zero;
-                return;
-            }
-
-            Vector2 dir = desiredMove.normalized;
-            rb.linearVelocity = dir * moveSpeed;
-            return;
-        }
-
-        // leader stop: desiredMove는 위치차로 취급
-        if (desiredMove.sqrMagnitude < 0.0001f)
+        if (desired.sqrMagnitude < 0.0001f)
         {
             rb.linearVelocity = Vector2.zero;
             return;
         }
 
-        float dist = desiredMove.magnitude;
+        if (desiredIsDirection)
+        {
+            Vector2 dir = desired.normalized;
+            rb.linearVelocity = dir * moveSpeed;
+            return;
+        }
+
+        // ToPoint Arrive
+        float dist = desired.magnitude;
         if (dist <= stopRadius)
         {
             rb.linearVelocity = Vector2.zero;
             return;
         }
 
-        Vector2 d = desiredMove / dist;
-
         float speed = moveSpeed;
         if (dist < slowRadius)
             speed *= (dist / slowRadius);
 
+        Vector2 d = desired / dist;
         rb.linearVelocity = d * speed;
     }
 
-    Transform FindClosestEnemyAroundLeader_NoOverlap()
+    // ---------- Scan (No Overlap) ----------
+    Transform FindClosestEnemyAroundLeader_NoOverlap(Vector2 leaderPos)
     {
-        Vector2 center = leader.position;
-
-        float r = detectRadius;   
-        float r2 = r * r;
+        float r2 = detectRadius * detectRadius;
 
         Transform best = null;
         float bestDist = float.MaxValue;
 
-        var all = CombatAgent.All;
+        var all = CombatAgent.All; // :contentReference[oaicite:4]{index=4}
         for (int i = 0; i < all.Count; i++)
         {
             var a = all[i];
             if (a == null || a.IsDead) continue;
             if (a.team != CombatAgent.Team.Enemy) continue;
 
-            // leader 주변 detectRadius 안에 있는 적만 후보
-            float d2Leader = ((Vector2)a.transform.position - center).sqrMagnitude;
+            Vector2 p = a.transform.position;
+
+            // leader 주변 detectRadius 안
+            float d2Leader = (p - leaderPos).sqrMagnitude;
             if (d2Leader > r2) continue;
 
-            // 내 기준 가장 가까운 적 선택
-            float d2Me = ((Vector2)a.transform.position - rb.position).sqrMagnitude;
+            // 나 기준 가까운 적
+            float d2Me = (p - rb.position).sqrMagnitude;
             if (d2Me < bestDist)
             {
                 bestDist = d2Me;
@@ -298,6 +273,66 @@ public class AllyBrain : MonoBehaviour
         }
 
         return best;
+    }
+
+    // ---------- Avoid Leader (push + yield) ----------
+    Vector2 GetLeaderAvoid(Vector2 myPos, Vector2 leaderPos, Vector2 leaderFwd)
+    {
+        Vector2 v = myPos - leaderPos;
+        float d2 = v.sqrMagnitude;
+        float r2 = leaderAvoidRadius * leaderAvoidRadius;
+
+        if (d2 >= r2 || d2 < 0.000001f) return Vector2.zero;
+
+        float d = Mathf.Sqrt(d2);
+        float t = 1f - (d / leaderAvoidRadius);
+
+        Vector2 push = (v / d) * (leaderAvoidStrength * t);
+
+        // leader가 움직일 때는 "옆으로 비키기" 추가
+        if (leaderFwd.sqrMagnitude > 0.0001f)
+        {
+            Vector2 right = new Vector2(leaderFwd.y, -leaderFwd.x);
+
+            // 같은 프레임에 모두 같은 쪽으로 몰리는 거 방지: 인덱스로 side 고정
+            float side = (myIndex % 2 == 0) ? -1f : +1f;
+
+            Vector2 yield = right * side * (leaderYieldStrength * t);
+            return push + yield;
+        }
+
+        return push;
+    }
+
+    // ---------- Separation (Allies) ----------
+    Vector2 GetAllySeparation(Vector2 myPos)
+    {
+        if (squad == null) return Vector2.zero;
+
+        float r = allySeparationRadius;
+        float r2 = r * r;
+
+        Vector2 sep = Vector2.zero;
+
+        var list = squad.allies; // public readonly list :contentReference[oaicite:5]{index=5}
+        for (int i = 0; i < list.Count; i++)
+        {
+            var other = list[i];
+            if (other == null || other == this) continue;
+
+            Vector2 op = other.GetPosition2D();
+            Vector2 v = myPos - op;
+            float d2 = v.sqrMagnitude;
+
+            if (d2 < 0.000001f || d2 > r2) continue;
+
+            float d = Mathf.Sqrt(d2);
+            float t = 1f - (d / r);
+
+            sep += (v / d) * (allySeparationStrength * t);
+        }
+
+        return sep;
     }
 
     void ApplyAnimAndFlip(Vector2 moveVec)

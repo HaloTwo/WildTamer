@@ -66,11 +66,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7695309065870355487, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
       propertyPath: attackRange
-      value: 3
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 7695309065870355487, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
       propertyPath: attackCooldown
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8319951415880408710, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: detectRadius
+      value: 5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:

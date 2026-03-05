@@ -59,7 +59,7 @@ public class EnemyBrain : MonoBehaviour
         }
 
         // 타겟 있으면 접근/공격
-        if (currentTarget != null && currentTarget.gameObject.activeInHierarchy)
+        if (currentTarget != null && currentTarget.gameObject.activeInHierarchy || combat.IsDead)
         {
             var other = currentTarget.GetComponentInParent<CombatAgent>();
             if (other == null || other.IsDead) { currentTarget = null; return; }

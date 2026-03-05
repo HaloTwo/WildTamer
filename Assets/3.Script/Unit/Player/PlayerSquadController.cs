@@ -6,11 +6,16 @@ public class PlayerSquadController : MonoBehaviour
     [SerializeField] int maxAllies = 20;
     public readonly List<AllyBrain> allies = new();
 
-    [Header("Formation: Grid")]
-    [SerializeField] int columns = 3;
-    [SerializeField] float spacingX = 0.9f;
-    [SerializeField] float spacingY = 0.9f;
-    [SerializeField] float backOffset = 1.2f;
+    [Header("Idle Ring (around player)")]
+    [SerializeField] float idleBaseRadius = 1.2f;
+    [SerializeField] float idleRingStep = 0.4f;
+    [SerializeField] int idlePerRing = 8;
+
+    [Header("Combat Ring (around target)")]
+    [SerializeField] float combatRadiusMul = 0.85f;   // AttackRange * mul 위치에 서서 때리기
+    [SerializeField] float combatSlotStepRad = 0.55f; // 슬롯 각도 간격(라디안). 작을수록 더 촘촘
+    [SerializeField] int combatTrySlots = 12;         // 자리 없으면 회전하며 최대 시도 횟수
+    [SerializeField] float combatOccupyRadius = 0.35f;// 이 반경 안에 다른 Ally 있으면 점유로 판단
 
     [SerializeField] List<AllyBrain> testAllies;
     [SerializeField] PlayerMover2D playerMover;
@@ -18,7 +23,6 @@ public class PlayerSquadController : MonoBehaviour
     void Start()
     {
         foreach (var a in testAllies) OnTame(a);
-
         if (playerMover == null) playerMover = GetComponent<PlayerMover2D>();
     }
 
@@ -30,7 +34,6 @@ public class PlayerSquadController : MonoBehaviour
 
         allies.Add(ally);
 
-        // 리더=플레이어, 인덱스 주입
         ally.SetupAsAlly(transform);
         ally.SetFormation(this, allies.Count - 1);
         RefreshIndices();
@@ -52,15 +55,66 @@ public class PlayerSquadController : MonoBehaviour
             if (allies[i] != null) allies[i].SetIndex(i);
     }
 
-    public Vector2 GetRingWorldPos(int index)
+    // -------------------- Idle Ring --------------------
+    public Vector2 GetIdleRingWorldPos(int index)
     {
-        // allies.Count 기준으로 원형 배치
-        int n = Mathf.Max(1, allies.Count);
-        float angle = (index / (float)n) * Mathf.PI * 2f;
+        int ring = index / Mathf.Max(1, idlePerRing);
+        int inRing = index % Mathf.Max(1, idlePerRing);
+        int perRing = Mathf.Max(1, idlePerRing);
 
-        float radius = 1.2f + (index / 8) * 0.4f; // 인원 많아지면 바깥 링
+        float angle = (inRing / (float)perRing) * Mathf.PI * 2f;
+        float radius = idleBaseRadius + ring * idleRingStep;
+
         Vector2 offset = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
-
         return (Vector2)transform.position + offset;
+    }
+
+    // -------------------- Combat Ring Slot --------------------
+    // "빈 자리" 찾아서 반환. (OverlapCircle 금지 → squad.allies + 거리로 점유 판단)
+    public Vector2 GetCombatSlotWorldPos(Transform target, int myIndex, float attackRange, Vector2 myPos)
+    {
+        if (target == null) return myPos;
+
+        Vector2 center = target.position;
+
+        float radius = Mathf.Max(0.05f, attackRange * combatRadiusMul);
+
+        // golden angle 기반으로 퍼뜨리기 (같은 인덱스라도 겹침 덜함)
+        float baseAngle = (myIndex * 2.39996323f); // golden angle (rad)
+        float step = Mathf.Max(0.2f, combatSlotStepRad);
+
+        for (int k = 0; k < Mathf.Max(1, combatTrySlots); k++)
+        {
+            float a = baseAngle + (k * step);
+
+            Vector2 candidate = center + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * radius;
+
+            if (!IsOccupied(candidate, myPos))
+                return candidate;
+        }
+
+        // 다 막혀 있으면 그냥 내가 가까운 쪽(그래도 덜 비비게)
+        Vector2 fallback = center + (myPos - center).normalized * radius;
+        return fallback;
+    }
+
+    bool IsOccupied(Vector2 candidate, Vector2 myPos)
+    {
+        float occ2 = combatOccupyRadius * combatOccupyRadius;
+
+        for (int i = 0; i < allies.Count; i++)
+        {
+            var a = allies[i];
+            if (a == null) continue;
+
+            // 나 자신 제외: myPos랑 거의 같으면 스킵
+            Vector2 ap = a.GetPosition2D();
+            if ((ap - myPos).sqrMagnitude < 0.0001f) continue;
+
+            if ((ap - candidate).sqrMagnitude <= occ2)
+                return true;
+        }
+
+        return false;
     }
 }

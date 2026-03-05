@@ -207,12 +207,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ea692a40cd8607c46993e993556dcb7d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AllyBrain
-  moveSpeed: 3.25
+  moveSpeed: 3.5
   regroupDistance: 6
+  idleHoldRadius: 1.5
   scanInterval: 0.25
   detectRadius: 3
   slowRadius: 1.2
   stopRadius: 0.15
+  leaderAvoidRadius: 0.9
+  leaderAvoidStrength: 1.2
+  leaderYieldStrength: 1.6
+  allySeparationRadius: 0.6
+  allySeparationStrength: 1
+  combatRepathInterval: 0.12
   playerMover: {fileID: 0}
 --- !u!1 &1101644111887756306
 GameObject:
