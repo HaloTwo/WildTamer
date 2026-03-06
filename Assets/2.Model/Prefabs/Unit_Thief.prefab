@@ -12,6 +12,54 @@ PrefabInstance:
       propertyPath: m_Name
       value: Unit_Thief
       objectReference: {fileID: 0}
+    - target: {fileID: 908961648966390343, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: hatRenderer
+      value: 
+      objectReference: {fileID: 2325839392546420833}
+    - target: {fileID: 908961648966390343, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: bodyRenderer
+      value: 
+      objectReference: {fileID: 2325839393248519669}
+    - target: {fileID: 908961648966390343, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: allyHatRenderer
+      value: 
+      objectReference: {fileID: 21300088, guid: 15b2d2faaecad4bfb9edc6585d94f509, type: 3}
+    - target: {fileID: 908961648966390343, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: backArmRenderer
+      value: 
+      objectReference: {fileID: 2325839395091236849}
+    - target: {fileID: 908961648966390343, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: allybodyRenderer
+      value: 
+      objectReference: {fileID: 21300116, guid: 15b2d2faaecad4bfb9edc6585d94f509, type: 3}
+    - target: {fileID: 908961648966390343, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: enemyHatRenderer
+      value: 
+      objectReference: {fileID: 21300092, guid: 15b2d2faaecad4bfb9edc6585d94f509, type: 3}
+    - target: {fileID: 908961648966390343, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: frontArmRenderer
+      value: 
+      objectReference: {fileID: 2325839392693086699}
+    - target: {fileID: 908961648966390343, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: enemybodyRenderer
+      value: 
+      objectReference: {fileID: 21300114, guid: 15b2d2faaecad4bfb9edc6585d94f509, type: 3}
+    - target: {fileID: 908961648966390343, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: allyBackArmRenderer
+      value: 
+      objectReference: {fileID: 21300054, guid: 15b2d2faaecad4bfb9edc6585d94f509, type: 3}
+    - target: {fileID: 908961648966390343, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: allyFrontArmRenderer
+      value: 
+      objectReference: {fileID: 21300058, guid: 15b2d2faaecad4bfb9edc6585d94f509, type: 3}
+    - target: {fileID: 908961648966390343, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: enemyBackArmRenderer
+      value: 
+      objectReference: {fileID: 21300010, guid: 15b2d2faaecad4bfb9edc6585d94f509, type: 3}
+    - target: {fileID: 908961648966390343, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: enemyFrontArmRenderer
+      value: 
+      objectReference: {fileID: 21300012, guid: 15b2d2faaecad4bfb9edc6585d94f509, type: 3}
     - target: {fileID: 1303670636407808352, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -54,7 +102,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5660600815793033870, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
       propertyPath: moveSpeed
-      value: 3
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 7695309065870355487, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
       propertyPath: anim
@@ -70,7 +118,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7695309065870355487, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
       propertyPath: attackRange
-      value: 2
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7695309065870355487, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: attackCooldown
+      value: 0.5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:
@@ -157,6 +209,26 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 465565256991826307}
   m_SourcePrefab: {fileID: 100100000, guid: 13c470c5b8dcd4854834911f7e0a9a6c, type: 3}
+--- !u!212 &2325839392546420833 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 212000012096086302, guid: 13c470c5b8dcd4854834911f7e0a9a6c, type: 3}
+  m_PrefabInstance: {fileID: 2501228946466232703}
+  m_PrefabAsset: {fileID: 0}
+--- !u!212 &2325839392693086699 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 212000012511457428, guid: 13c470c5b8dcd4854834911f7e0a9a6c, type: 3}
+  m_PrefabInstance: {fileID: 2501228946466232703}
+  m_PrefabAsset: {fileID: 0}
+--- !u!212 &2325839393248519669 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 212000013066927242, guid: 13c470c5b8dcd4854834911f7e0a9a6c, type: 3}
+  m_PrefabInstance: {fileID: 2501228946466232703}
+  m_PrefabAsset: {fileID: 0}
+--- !u!212 &2325839395091236849 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 212000010614513294, guid: 13c470c5b8dcd4854834911f7e0a9a6c, type: 3}
+  m_PrefabInstance: {fileID: 2501228946466232703}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2501094250244697395 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1000012663239756, guid: 13c470c5b8dcd4854834911f7e0a9a6c, type: 3}

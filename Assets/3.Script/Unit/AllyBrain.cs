@@ -1,73 +1,58 @@
+using System;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
-public class AllyBrain : MonoBehaviour
+public class AllyBrain : BrainBase
 {
-    PlayerMover2D playerMover;
-
-    CombatAgent combat;
-    Rigidbody2D rb;
-    Animator anim;
+    int myIndex = -1;
 
     Transform leader;
     PlayerSquadController squad;
-    int myIndex = -1;
-
-    Transform currentTarget;
+    PlayerMover2D playerMover;
 
     [Header("Move")]
-    [SerializeField] float moveSpeed = 3.25f;
-    [SerializeField] float regroupDistance = 6.0f;
+    [SerializeField] float regroupDistance = 6.0f; // leader와 이 이상 멀어지면 전투 취소하고 무조건 복귀
 
     [Header("Idle")]
     float idleHoldRadius = 1.25f; // leader 주변 이 안이면 "정렬 강요 없이" 정지
 
-    [Header("Scan")]
-    [SerializeField] float scanInterval = 0.2f;
-    float detectRadius = 3.5f;
-    float nextScanTime;
-
     [Header("Arrive (ToPoint)")]
-    [SerializeField] float slowRadius = 1.2f;
-    [SerializeField] float stopRadius = 0.25f;
+    [SerializeField] float slowRadius = 1.2f; // 목적지에 이 안으로 들어오면 감속 시작. stopRadius보다 커야 함.
+    [SerializeField] float stopRadius = 0.3f; // 목적지에 이 안으로 들어오면 멈춤.
 
     [Header("Avoid (Leader)")]
-    [SerializeField] float leaderAvoidRadius = 0.9f;
-    [SerializeField] float leaderAvoidStrength = 1.2f;
+    [SerializeField] float leaderAvoidRadius = 0.9f; // leader 주변 이 반경 안에 들어오면 밀어내기 시작
+    [SerializeField] float leaderAvoidStrength = 1.2f; // leader와 겹치지 않도록 밀어내는 힘
     [SerializeField] float leaderYieldStrength = 1.6f; // 좌우 비키기
 
     [Header("Separation (Allies)")]
-    [SerializeField] float allySeparationRadius = 0.6f;
-    [SerializeField] float allySeparationStrength = 1.0f;
+    [SerializeField] float allySeparationRadius = 0.6f; // Separation 시작 반경 (이 안에 다른 아군이 있으면 서로 밀어내기 시작)
+    [SerializeField] float allySeparationStrength = 1.0f; // 서로 겹치지 않도록 밀어내는 힘
 
     [Header("Combat")]
-    [SerializeField] float combatRepathInterval = 0.12f; // 전투 슬롯 재선정 텀(너무 자주 바꾸면 지터)
+    [SerializeField] float combatRepathInterval = 0.4f; // 전투 슬롯 재선정 텀(너무 자주 바꾸면 지터)
     float nextCombatRepathTime;
-    Vector2 combatSlotWorld; // 목표 슬롯
 
+
+    Vector2 combatSlotWorld; // 목표 슬롯
 
     Vector2 desired;
     bool desiredIsDirection;
 
-    float facing = 1f;
-    const string isMovingParam = "IsMoving";
 
-    public void FirstBrainSet(CombatAgent combatAgent, Animator animator, Rigidbody2D rigidbody2D)
+    public void SetupAsAlly(PlayerSquadController squadController, int index)
     {
-        combat = combatAgent;
-        anim = animator;
-        rb = rigidbody2D;
-    }
+        var player = GamaManager.Instance.player;
 
-    public void SetupAsAlly(Transform leaderTr)
-    {
-        leader = leaderTr;
-        enabled = true;
+        myIndex = index;
+
+        squad ??= squadController;
+        leader ??= player.transform;
+        playerMover ??= player.GetComponent<PlayerMover2D>();
+
         currentTarget = null;
 
-        if (combat != null) combat.SetTeam(CombatAgent.Team.Ally);
-
-        if (playerMover == null && leader != null) playerMover = leader.GetComponent<PlayerMover2D>();
+        combat.SetTeam(CombatAgent.Team.Ally);
     }
 
     public void SetFormation(PlayerSquadController squadController, int index)
@@ -78,15 +63,12 @@ public class AllyBrain : MonoBehaviour
 
     public void SetIndex(int index) => myIndex = index;
 
-    // PlayerSquadController 점유체크에서 사용
     public Vector2 GetPosition2D() => (rb != null) ? rb.position : (Vector2)transform.position;
 
     void Update()
     {
-        if (combat == null || combat.IsDead) return;
-        if (rb == null) return;
-        if (leader == null) return;
-        if (squad == null || myIndex < 0) return;
+        if (combat.IsDead) return;
+        if (myIndex < 0) return;
 
         Vector2 myPos = rb.position;
         Vector2 leaderPos = leader.position;
@@ -164,6 +146,7 @@ public class AllyBrain : MonoBehaviour
                 else
                 {
                     // 공격 중엔 밀기 줄이려고 이동은 멈추는 편이 훨씬 안정적
+                    FaceTo(currentTarget.position);
                     combat.TryAttack(currentTarget);
                     desired = Vector2.zero;
                     desiredIsDirection = false;
@@ -211,8 +194,6 @@ public class AllyBrain : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (rb == null) return;
-
         if (desired.sqrMagnitude < 0.0001f)
         {
             rb.linearVelocity = Vector2.zero;
@@ -337,18 +318,10 @@ public class AllyBrain : MonoBehaviour
 
     void ApplyAnimAndFlip(Vector2 moveVec)
     {
-        if (anim == null) anim = GetComponentInChildren<Animator>(true);
-        if (anim == null) return;
-
         bool moving = rb.linearVelocity.sqrMagnitude > 0.01f;
         anim.SetBool(isMovingParam, moving);
         if (!moving) return;
 
-        if (moveVec.x > 0.01f) facing = -0.7f;
-        else if (moveVec.x < -0.01f) facing = 0.7f;
-
-        Vector3 s = transform.localScale;
-        s.x = facing;
-        transform.localScale = s;
+        FaceByMove(moveVec);
     }
 }

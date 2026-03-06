@@ -17,42 +17,41 @@ public class PlayerSquadController : MonoBehaviour
     [SerializeField] int combatTrySlots = 12;         // 자리 없으면 회전하며 최대 시도 횟수
     [SerializeField] float combatOccupyRadius = 0.35f;// 이 반경 안에 다른 Ally 있으면 점유로 판단
 
-    [SerializeField] List<AllyBrain> testAllies;
-    [SerializeField] PlayerMover2D playerMover;
-
-    void Start()
+    private void Start()
     {
-        foreach (var a in testAllies) OnTame(a);
-        if (playerMover == null) playerMover = GetComponent<PlayerMover2D>();
+        UIManager.Instance.UnitCountTxtUpdate(allies.Count, maxAllies);
     }
 
     public bool Register(AllyBrain ally)
     {
-        if (ally == null) return false;
         if (allies.Count >= maxAllies) return false;
         if (allies.Contains(ally)) return false;
 
         allies.Add(ally);
 
-        ally.SetupAsAlly(transform);
-        ally.SetFormation(this, allies.Count - 1);
+        ally.SetupAsAlly(this, allies.Count - 1);
         RefreshIndices();
+
         return true;
     }
 
     public void Unregister(AllyBrain ally)
     {
         if (ally == null) return;
+
         allies.Remove(ally);
         RefreshIndices();
     }
 
-    public void OnTame(AllyBrain newAlly) => Register(newAlly);
 
     void RefreshIndices()
     {
         for (int i = 0; i < allies.Count; i++)
+        {
             if (allies[i] != null) allies[i].SetIndex(i);
+        }
+
+        UIManager.Instance.UnitCountTxtUpdate(allies.Count, maxAllies);
     }
 
     // -------------------- Idle Ring --------------------

@@ -3,8 +3,11 @@ using UnityEngine;
 
 public class GamaManager : Singleton<GamaManager>
 {
-    [SerializeField] GameObject fieldRoot;
-    [SerializeField] GameObject campRoot;
+    public GameObject player;
+
+    //[SerializeField] GameObject fieldRoot;
+    //[SerializeField] GameObject campRoot;
+
 
     //[SerializeField] Spawner spawner;
     //[SerializeField] CombatDirector combat;

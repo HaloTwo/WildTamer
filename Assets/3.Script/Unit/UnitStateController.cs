@@ -1,5 +1,5 @@
+using TMPro;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class UnitStateController : MonoBehaviour
 {
@@ -10,6 +10,20 @@ public class UnitStateController : MonoBehaviour
     [SerializeField] EnemyBrain enemyBrain;
     [SerializeField] AllyBrain allyBrain;
 
+    [Header("랜더링 Refs")]
+    [SerializeField] SpriteRenderer bodyRenderer;
+    [SerializeField] SpriteRenderer backArmRenderer;
+    [SerializeField] SpriteRenderer frontArmRenderer;
+    [SerializeField] SpriteRenderer hatRenderer;
+
+    [Header("적 스프라이트")]
+    [SerializeField] Sprite enemybodyRenderer;
+    [SerializeField] Sprite enemyHatRenderer;
+
+    [Header("아군 스프라이트")]
+    [SerializeField] Sprite allybodyRenderer;
+    [SerializeField] Sprite allyHatRenderer;
+
     [Header("Corpse UI (Unit 안에 있는 Canvas)")]
     [SerializeField] GameObject corpseUI;
 
@@ -17,40 +31,31 @@ public class UnitStateController : MonoBehaviour
     CircleCollider2D circleCollider;
 
     UnitState state;
-    Transform player;
+    PlayerSquadController playerSquad;
     Animator anim;
     Rigidbody2D rb;
 
     int enemyLayer;
     int allyLayer;
-    int corpseLayer = 0;
 
     void Awake()
     {
-        if (capsuleCollider == null) capsuleCollider = GetComponent<CapsuleCollider2D>();
-        if (circleCollider == null) circleCollider = GetComponent<CircleCollider2D>();
-        if (anim == null) anim = GetComponentInChildren<Animator>(true);
-
-        corpseUI.SetActive(false);
-        circleCollider.enabled = false;
-
-        player = GameObject.FindWithTag("Player")?.transform;
-
         enemyLayer = LayerMask.NameToLayer("Enemy");
         allyLayer = LayerMask.NameToLayer("Ally");
 
+        TryGetComponent(out capsuleCollider);
+        TryGetComponent(out circleCollider);
+        TryGetComponent(out rb);
+        anim = GetComponentInChildren<Animator>(true);
 
-        if (TryGetComponent(out rb))
-        {
-            rb.gravityScale = 0f;
-            rb.linearDamping = 5f;
-            rb.freezeRotation = true;
-            rb.interpolation = RigidbodyInterpolation2D.Interpolate;
-        }
+        rb.mass = 10f;
+        rb.gravityScale = 0f;
+        rb.linearDamping = 10f;
+        rb.freezeRotation = true;
+        rb.interpolation = RigidbodyInterpolation2D.Interpolate;
 
         enemyBrain.FirstBrainSet(combat, anim, rb);
         allyBrain.FirstBrainSet(combat, anim, rb);
-
 
         // 죽음 이벤트는 “시체 상태로 전환”만 담당
         combat.OnDead += OnDead;
@@ -61,56 +66,100 @@ public class UnitStateController : MonoBehaviour
         SpawnAsEnemy();
     }
 
+    private void OnDisable()
+    {
+        InitializeUnit();
+    }
+
+    //상태 초기화
+    void InitializeUnit()
+    {
+        state = UnitState.Default;
+
+        corpseUI.SetActive(false);
+
+        combat.enabled = true;
+        combat.ResetRuntime(fullHeal: true);
+
+        enemyBrain.enabled = false;
+        allyBrain.enabled = false;
+
+        capsuleCollider.enabled = true;
+        circleCollider.enabled = false;
+
+        ObjectPool.Instance.Release(gameObject);
+    }
 
 
-    // ===== 외부에서 스폰할 때 호출 (풀 재사용 대비) =====
+    void SetRender(CombatAgent.Team team)
+    {
+        if (team == CombatAgent.Team.Ally)
+        {
+            bodyRenderer.sprite = allybodyRenderer;
+            hatRenderer.sprite = allyHatRenderer;
+
+            backArmRenderer.color = Color.black;
+            frontArmRenderer.color = Color.black;
+            return;
+        }
+
+        bodyRenderer.sprite = enemybodyRenderer;
+        hatRenderer.sprite = enemyHatRenderer;
+
+        backArmRenderer.color = Color.white;
+        frontArmRenderer.color = Color.white;
+    }
+
 
     public void SpawnAsEnemy()
     {
         state = UnitState.EnemyAlive;
 
-        corpseUI.gameObject.SetActive(false);
+        corpseUI.SetActive(false);
 
         // 팀/레이어
         combat.enabled = true;
         combat.SetTeam(CombatAgent.Team.Enemy);
-        SetLayerRecursively(gameObject, enemyLayer);
+        SetRender(CombatAgent.Team.Enemy);
+
+        gameObject.layer = enemyLayer;
 
         // 브레인 전환
-        if (allyBrain) allyBrain.enabled = false;
-        if (enemyBrain)
-        {
-            enemyBrain.enabled = true;
-            enemyBrain.EnemyBrainSet();
-        }
+        allyBrain.enabled = false;
+        enemyBrain.enabled = true;
+        enemyBrain.EnemyBrainSet();
 
         combat.ResetRuntime(fullHeal: true);
-
         anim.ResetControllerState(true);
 
         capsuleCollider.enabled = true;
         circleCollider.enabled = false;
     }
 
-    public void SpawnAsAlly(Transform leader)
+    public void SpawnAsAlly()
     {
         state = UnitState.AllyAlive;
+        gameObject.layer = allyLayer;
 
-        if (corpseUI != null) corpseUI.gameObject.SetActive(false);
+        corpseUI.SetActive(false);
 
         combat.enabled = true;
         combat.SetTeam(CombatAgent.Team.Ally);
-        SetLayerRecursively(gameObject, allyLayer);
+        SetRender(CombatAgent.Team.Ally);
 
-        if (enemyBrain) enemyBrain.enabled = false;
-        if (allyBrain) allyBrain.enabled = true;
+        enemyBrain.enabled = false;
+        allyBrain.enabled = true;
 
         combat.ResetRuntime(fullHeal: true);
-
         anim.ResetControllerState(true);
 
         capsuleCollider.enabled = true;
         circleCollider.enabled = false;
+
+        anim.SetTrigger("IsTaming");
+
+        playerSquad ??= GamaManager.Instance.player.GetComponent<PlayerSquadController>();
+        playerSquad.Register(allyBrain);
     }
 
     // ===== 죽었을 때: 시체 상태로 전환 =====
@@ -141,11 +190,9 @@ public class UnitStateController : MonoBehaviour
         //실패하면 즉시 풀 반환
         if (!tameSuccess)
         {
-            InitializeForReuse();
-            ObjectPool.Instance.Release(gameObject);
+            InitializeUnit();
             return;
         }
-
 
         //corpse 상태로 전환 (즉시 풀 반환하지 않고, 플레이어가 상호작용할 때까지 대기)
         state = UnitState.Corpse;
@@ -157,42 +204,34 @@ public class UnitStateController : MonoBehaviour
         capsuleCollider.enabled = false;
         circleCollider.enabled = true;
 
-        corpseUI.SetActive(true);
+        //죽을땐 무조건 정방향으로 죽도록
+        Vector3 s = transform.localScale;
+        s.x = 0.7f;
+        transform.localScale = s;
+
+        //애니메이션은 무조건 죽는 애니메이션이 나오도록 (공격 애니메이션이 나와있을 수도 있으므로 초기화)
+        anim.ResetTrigger("IsAttack");
+        anim.SetTrigger("IsDead");
     }
 
 
     //Ally일때 사망하면 
     void HandleAllyDeath()
     {
-        if (player.TryGetComponent<PlayerSquadController>(out var s))
-        {
-            s.Unregister(allyBrain);
-        }
+        //스쿼드에서 등록 해제
+        playerSquad.Unregister(allyBrain);
 
-        InitializeForReuse();
-        ObjectPool.Instance.Release(gameObject);
+        //초기화   
+        InitializeUnit();
     }
-
-
 
 
 
     // ===== 버튼에서 호출 =====
     public void OnClickTame()
     {
-        var squad = FindAnyObjectByType<PlayerSquadController>();
-        Transform leader = squad != null ? squad.transform : player;
-
         // 아군으로 전환 + 스쿼드 등록
-        SpawnAsAlly(leader);
-
-        if (squad != null)
-        {
-            var ab = GetComponent<AllyBrain>();
-            if (ab != null) squad.OnTame(ab);
-        }
-
-
+        SpawnAsAlly();
     }
 
     public void OnClickSalvage()
@@ -200,43 +239,14 @@ public class UnitStateController : MonoBehaviour
         // TODO: 골드 지급
         // Economy.Instance.AddGold(...);
 
-        // 풀 반환(혹은 비활성)
-        InitializeForReuse();
-        ObjectPool.Instance.Release(gameObject);
+        // 초기화
+        InitializeUnit();
     }
 
 
 
 
 
-    void SetLayerRecursively(GameObject go, int layer)
-    {
-        if (layer < 0) return
-                ;
-        go.layer = layer;
-
-        foreach (Transform c in go.transform)
-        {
-            SetLayerRecursively(c.gameObject, layer);
-        }
-    }
-
-
-    void InitializeForReuse()
-    {
-        state = UnitState.Default;
-
-        corpseUI.SetActive(false);
-
-        combat.enabled = true;
-        combat.ResetRuntime(fullHeal: true);
-
-        enemyBrain.enabled = false;
-        allyBrain.enabled = false;
-
-        capsuleCollider.enabled = true;
-        circleCollider.enabled = false;
-    }
 
 
 
@@ -246,12 +256,14 @@ public class UnitStateController : MonoBehaviour
     {
         if (state != UnitState.Corpse) return;
 
+        Debug.Log("Rrrr");
+
         // 플레이어만 반응
         if (!collision.CompareTag("Player")) return;
 
+        Debug.Log("Rrrr2");
 
         corpseUI.SetActive(true);
-
     }
 
     private void OnTriggerExit2D(Collider2D collision)

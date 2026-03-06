@@ -169,10 +169,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CombatAgent
   team: 0
-  maxHP: 200
-  damage: 5
+  hpBarGauge: {fileID: 0}
+  hpBar: {fileID: 0}
+  maxHP: 400
+  damage: 10
   attackRange: 3
-  attackCooldown: 1
+  attackCooldown: 0.7
   TameChance: 0.6
   anim: {fileID: 95000012115735308}
   projectilePrefab: {fileID: 0}
@@ -191,12 +193,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerSquadController
   maxAllies: 20
-  columns: 3
-  spacingX: 0.9
-  spacingY: 0.9
-  backOffset: 1.2
-  testAllies: []
-  playerMover: {fileID: 3558230977023868316}
+  idleBaseRadius: 1.2
+  idleRingStep: 0.4
+  idlePerRing: 8
+  combatRadiusMul: 0.85
+  combatSlotStepRad: 0.55
+  combatTrySlots: 12
+  combatOccupyRadius: 0.35
 --- !u!1 &17243134457649702
 GameObject:
   m_ObjectHideFlags: 0
@@ -283,7 +286,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 1
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300072, guid: 15b2d2faaecad4bfb9edc6585d94f509, type: 3}
+  m_Sprite: {fileID: 21300074, guid: 15b2d2faaecad4bfb9edc6585d94f509, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -830,7 +833,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 1
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300174, guid: 15b2d2faaecad4bfb9edc6585d94f509, type: 3}
+  m_Sprite: {fileID: 21300168, guid: 15b2d2faaecad4bfb9edc6585d94f509, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0

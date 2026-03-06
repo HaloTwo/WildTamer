@@ -1,6 +1,7 @@
+using System;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.Tilemaps;
+using UnityEngine.UI;
 
 public class MiniMapFog_WorldAccum : Singleton<MiniMapFog_WorldAccum>
 {
@@ -46,10 +47,6 @@ public class MiniMapFog_WorldAccum : Singleton<MiniMapFog_WorldAccum>
 
     Vector2 lastRevealPos;
 
-
-    //세이브 키
-    readonly string saveKey = "Fog_Map";
-
     protected override void Awake()
     {
         base.Awake();
@@ -83,7 +80,7 @@ public class MiniMapFog_WorldAccum : Singleton<MiniMapFog_WorldAccum>
         fogImage.texture = fogTex;
 
         //불러오기
-        LoadFog(saveKey);
+        LoadFog();
 
         // 시작 위치 뚫기
         RevealWorld(player.position);
@@ -115,8 +112,7 @@ public class MiniMapFog_WorldAccum : Singleton<MiniMapFog_WorldAccum>
         Vector2 pos = player.position;
 
         // 일정 거리 이상 이동했을 때만, 일정 주기로만 Reveal
-        if (Time.time >= nextTime &&
-            (pos - lastRevealPos).sqrMagnitude >= revealMoveThreshold * revealMoveThreshold)
+        if (Time.time >= nextTime && (pos - lastRevealPos).sqrMagnitude >= revealMoveThreshold * revealMoveThreshold)
         {
             nextTime = Time.time + updateInterval;
             lastRevealPos = pos;
@@ -127,16 +123,15 @@ public class MiniMapFog_WorldAccum : Singleton<MiniMapFog_WorldAccum>
         if (saveDirty && Time.time >= nextSaveTime)
         {
             nextSaveTime = Time.time + saveInterval;
-            SaveFog(saveKey);
+            SaveFog();
             saveDirty = false;
         }
     }
 
-    // 갱신 : 현재 reveal 원과 이전 reveal 원의 합집합 영역만 갱신해서 최적화
+    // 갱신
     void RevealWorld(Vector2 worldPos)
     {
-        if (!WorldToUV_WholeMap(worldPos, out float u, out float v))
-            return;
+        if (!WorldToUV_WholeMap(worldPos, out float u, out float v)) return;
 
         int cx = Mathf.RoundToInt(u * (texSize - 1));
         int cy = Mathf.RoundToInt(v * (texSize - 1));
@@ -161,6 +156,7 @@ public class MiniMapFog_WorldAccum : Singleton<MiniMapFog_WorldAccum>
         int yMin = curYMin;
         int yMax = curYMax;
 
+        // 이전 reveal이 있으면 합집합 영역 계산
         if (hasPrevReveal)
         {
             xMin = Mathf.Min(xMin, Mathf.Max(0, prevCx - prevRx));
@@ -202,14 +198,15 @@ public class MiniMapFog_WorldAccum : Singleton<MiniMapFog_WorldAccum>
             }
         }
 
+        // 변경된 픽셀이 있으면 텍스처에 적용
         if (changed)
         {
             fogTex.SetPixels32(pixels);
             fogTex.Apply(false);
         }
 
-        if (visitedChanged)
-            saveDirty = true;
+        // visited 배열이 변경된 경우에는 저장이 필요하다고 표시
+        if (visitedChanged) saveDirty = true;
 
         prevCx = cx;
         prevCy = cy;
@@ -289,33 +286,39 @@ public class MiniMapFog_WorldAccum : Singleton<MiniMapFog_WorldAccum>
         max = new Vector2(maxX, maxY);
     }
 
-    public void SaveFog(string key)
+
+    /// <summary>
+    /// Fog 상태 저장
+    /// </summary>
+    public void SaveFog()
     {
-        if (string.IsNullOrEmpty(key)) return;
         if (visited == null || visited.Length == 0) return;
 
-        string b64 = System.Convert.ToBase64String(visited);
-        PlayerPrefs.SetString(key, b64);
-        PlayerPrefs.Save();
+        SaveManager.Instance.SaveBytes(SaveName.MapFogData, visited);
     }
 
-    public bool LoadFog(string key)
+
+    /// <summary>
+    /// Fog 상태 로드
+    /// </summary>
+    /// <returns></returns>
+    public bool LoadFog()
     {
-        if (string.IsNullOrEmpty(key)) return false;
         if (visited == null || pixels == null || fogTex == null) return false;
-        if (!PlayerPrefs.HasKey(key)) return false;
 
-        string b64 = PlayerPrefs.GetString(key);
-        if (string.IsNullOrEmpty(b64)) return false;
+        byte[] data = SaveManager.Instance.LoadBytes(SaveName.MapFogData);
+        if (data == null || data.Length != visited.Length) return false; // 데이터가 없거나 크기가 맞지 않으면 로드 실패
 
-        byte[] data = System.Convert.FromBase64String(b64);
-        if (data == null || data.Length != visited.Length) return false;
-
-        System.Buffer.BlockCopy(data, 0, visited, 0, data.Length);
+        Buffer.BlockCopy(data, 0, visited, 0, data.Length);
         RebuildFogFromVisited();
+
         return true;
     }
 
+
+    /// <summary>
+    /// 다시 visited 배열을 기반으로 pixels의 알파값을 재구성해서 텍스처에 적용
+    /// </summary>
     void RebuildFogFromVisited()
     {
         if (visited == null || pixels == null || fogTex == null) return;

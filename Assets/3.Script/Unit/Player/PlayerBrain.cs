@@ -2,7 +2,6 @@ using UnityEngine;
 
 public class PlayerBrain : MonoBehaviour
 {
-    PlayerSquadController squad;
     CombatAgent combat;
 
     [Header("Auto Target Scan")]
@@ -23,8 +22,6 @@ public class PlayerBrain : MonoBehaviour
     {
         TryGetComponent(out combat);
         combat.team = CombatAgent.Team.Player;
-
-        TryGetComponent(out squad);
 
         filter = new ContactFilter2D();
         filter.SetLayerMask(enemyMask);
