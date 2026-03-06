@@ -2404,7 +2404,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &619394801
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2465,12 +2465,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 619394800}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1131241171}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &697841479
 PrefabInstance:
@@ -2839,6 +2839,40 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d10e3e1427ce00c4ca245553051a931d, type: 3}
+--- !u!1 &1131241170
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1131241171}
+  m_Layer: 0
+  m_Name: Map
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1131241171
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1131241170}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 619394802}
+  - {fileID: 2003857174}
+  - {fileID: 1940711276}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1153404259
 GameObject:
   m_ObjectHideFlags: 0
@@ -3102,64 +3136,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d10e3e1427ce00c4ca245553051a931d, type: 3}
---- !u!1 &1445515723
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1445515725}
-  - component: {fileID: 1445515724}
-  m_Layer: 0
-  m_Name: MIniMapFog
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1445515724
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1445515723}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 65925faab64ecd744ab6e22a6c3a6cf9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MiniMapFogSimple
-  player: {fileID: 1093755652}
-  minimapCam: {fileID: 279367966}
-  fogImage: {fileID: 1012601059}
-  minimapRect: {fileID: 425285730}
-  playerIcon: {fileID: 211826399}
-  boundsTilemap: {fileID: 1637611475}
-  texSize: 1024
-  revealRadiusWorld: 5
-  updateInterval: 0.05
-  unseenAlpha: 255
-  visitedAlpha: 250
-  visibleAlpha: 50
-  worldFogRenderer: {fileID: 2003857173}
-  worldFogMat: {fileID: 2100000, guid: aa44a9d7dd901c04f9710f54f87db96a, type: 2}
---- !u!4 &1445515725
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1445515723}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 620, y: 1180, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1460132700
 GameObject:
   m_ObjectHideFlags: 0
@@ -3275,7 +3251,7 @@ RectTransform:
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: -100, y: -100}
-  m_SizeDelta: {x: 150, y: 150}
+  m_SizeDelta: {x: 200, y: 200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1467442585
 CanvasRenderer:
@@ -7878,7 +7854,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1940711274}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 4, y: 4, z: 4}
   m_ConstrainProportionsScale: 1
@@ -7886,7 +7862,7 @@ Transform:
   - {fileID: 2090236662}
   - {fileID: 1637611473}
   - {fileID: 453083962}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1131241171}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2003857172
 GameObject:
@@ -7972,12 +7948,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2003857172}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 200, y: 200, z: 200}
   m_ConstrainProportionsScale: 1
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1131241171}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2070138819
 GameObject:
@@ -7990,6 +7966,7 @@ GameObject:
   - component: {fileID: 2070138821}
   - component: {fileID: 2070138820}
   - component: {fileID: 2070138822}
+  - component: {fileID: 2070138823}
   m_Layer: 0
   m_Name: GamaManager
   m_TagString: Untagged
@@ -8020,7 +7997,7 @@ Transform:
   m_GameObject: {fileID: 2070138819}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 360, y: 640, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -8054,6 +8031,32 @@ MonoBehaviour:
   - prefab: {fileID: 3126187359914517199, guid: c4497cb38ff47604598ae2d019f88a28, type: 3}
     prewarm: 3
     parent: {fileID: 0}
+--- !u!114 &2070138823
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2070138819}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 65925faab64ecd744ab6e22a6c3a6cf9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiniMapFogSimple
+  player: {fileID: 1093755652}
+  minimapCam: {fileID: 279367966}
+  fogImage: {fileID: 1012601059}
+  minimapRect: {fileID: 425285730}
+  playerIcon: {fileID: 211826399}
+  boundsTilemap: {fileID: 2090236664}
+  texSize: 1024
+  revealRadiusWorld: 5
+  updateInterval: 0.1
+  unseenAlpha: 255
+  visitedAlpha: 250
+  visibleAlpha: 50
+  worldFogRenderer: {fileID: 2003857173}
+  worldFogMat: {fileID: 2100000, guid: aa44a9d7dd901c04f9710f54f87db96a, type: 2}
 --- !u!1 &2090236661
 GameObject:
   m_ObjectHideFlags: 0
@@ -24218,11 +24221,8 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 2070138821}
-  - {fileID: 1445515725}
-  - {fileID: 2003857174}
   - {fileID: 519420032}
-  - {fileID: 1940711276}
-  - {fileID: 619394802}
+  - {fileID: 1131241171}
   - {fileID: 1847853021}
   - {fileID: 408621027}
   - {fileID: 1208660511}

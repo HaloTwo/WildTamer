@@ -1,9 +1,9 @@
 using UnityEngine;
-using UnityEngine.UIElements.Experimental;
+using UnityEngine.UIElements;
 
-public class UnitStateController : MonoBehaviour, ObjectPool.IPoolable
+public class UnitStateController : MonoBehaviour
 {
-    public enum UnitState { EnemyAlive, Corpse, AllyAlive }
+    public enum UnitState { Default, EnemyAlive, Corpse, AllyAlive }
 
     [Header("Refs")]
     [SerializeField] CombatAgent combat;
@@ -19,6 +19,7 @@ public class UnitStateController : MonoBehaviour, ObjectPool.IPoolable
     UnitState state;
     Transform player;
     Animator anim;
+    Rigidbody2D rb;
 
     int enemyLayer;
     int allyLayer;
@@ -39,11 +40,10 @@ public class UnitStateController : MonoBehaviour, ObjectPool.IPoolable
         allyLayer = LayerMask.NameToLayer("Ally");
 
 
-        if (TryGetComponent(out Rigidbody2D rb))
+        if (TryGetComponent(out rb))
         {
             rb.gravityScale = 0f;
-            //rb.mass = 1f;
-            rb.linearDamping = 5f; 
+            rb.linearDamping = 5f;
             rb.freezeRotation = true;
             rb.interpolation = RigidbodyInterpolation2D.Interpolate;
         }
@@ -116,40 +116,66 @@ public class UnitStateController : MonoBehaviour, ObjectPool.IPoolable
     // ===== 죽었을 때: 시체 상태로 전환 =====
     void OnDead(CombatAgent dead)
     {
-        if (state == UnitState.Corpse) return;
 
+        switch (state)
+        {
+            case UnitState.EnemyAlive:
+                HandleEnemyDeath();
+                break;
+
+            case UnitState.AllyAlive:
+                HandleAllyDeath();
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    //Enemy일때 사망하면
+    void HandleEnemyDeath()
+    {
+        //확률적으로 아군으로 전환 시도, 실패하면 풀 반환
         bool tameSuccess = Random.value <= combat.TameChance;
 
+        //실패하면 즉시 풀 반환
         if (!tameSuccess)
         {
-            // 돈 지급
-            // Economy.Instance.AddGold(...);
-
+            InitializeForReuse();
             ObjectPool.Instance.Release(gameObject);
             return;
         }
 
-        // 테이밍 성공 => 시체(기절) 상태로 남김 + UI 표시
+
+        //corpse 상태로 전환 (즉시 풀 반환하지 않고, 플레이어가 상호작용할 때까지 대기)
         state = UnitState.Corpse;
 
-        if (enemyBrain) enemyBrain.enabled = false;
-        if (allyBrain) allyBrain.enabled = false;
-
-        //anim.SetBool("IsDead", true);
-        anim.SetTrigger("IsDead");
-
-        Vector3 s = transform.localScale;
-        s.x = 0.7f;
-        transform.localScale = s;
+        enemyBrain.enabled = false;
+        allyBrain.enabled = false;
         combat.enabled = false;
 
         capsuleCollider.enabled = false;
         circleCollider.enabled = true;
 
-        SetLayerRecursively(gameObject, corpseLayer);
-
-        // UI는 Update 거리 체크로 켜짐(지금 방식 유지)
+        corpseUI.SetActive(true);
     }
+
+
+    //Ally일때 사망하면 
+    void HandleAllyDeath()
+    {
+        if (player.TryGetComponent<PlayerSquadController>(out var s))
+        {
+            s.Unregister(allyBrain);
+        }
+
+        InitializeForReuse();
+        ObjectPool.Instance.Release(gameObject);
+    }
+
+
+
+
 
     // ===== 버튼에서 호출 =====
     public void OnClickTame()
@@ -175,32 +201,46 @@ public class UnitStateController : MonoBehaviour, ObjectPool.IPoolable
         // Economy.Instance.AddGold(...);
 
         // 풀 반환(혹은 비활성)
+        InitializeForReuse();
         ObjectPool.Instance.Release(gameObject);
     }
 
-    static void SetLayerRecursively(GameObject go, int layer)
+
+
+
+
+    void SetLayerRecursively(GameObject go, int layer)
     {
-        if (layer < 0) return;
+        if (layer < 0) return
+                ;
         go.layer = layer;
+
         foreach (Transform c in go.transform)
+        {
             SetLayerRecursively(c.gameObject, layer);
+        }
     }
 
-    // ===== 풀 콜백 =====
-    public void OnSpawned()
+
+    void InitializeForReuse()
     {
-        // 스폰러가 SpawnAsEnemy/SpawnAsAlly 중 하나를 호출하는 게 정석.
-        // 실수 방지로 기본은 Enemy로 둬도 됨:
-        // SpawnAsEnemy();
+        state = UnitState.Default;
+
+        corpseUI.SetActive(false);
+
+        combat.enabled = true;
+        combat.ResetRuntime(fullHeal: true);
+
+        enemyBrain.enabled = false;
+        allyBrain.enabled = false;
+
+        capsuleCollider.enabled = true;
+        circleCollider.enabled = false;
     }
 
-    public void OnDespawned()
-    {
-        if (corpseUI != null) corpseUI.gameObject.SetActive(false);
-        combat.enabled = true; // 다음 재사용 대비
-        if (enemyBrain) enemyBrain.enabled = false;
-        if (allyBrain) allyBrain.enabled = false;
-    }
+
+
+
 
     private void OnTriggerEnter2D(Collider2D collision)
     {

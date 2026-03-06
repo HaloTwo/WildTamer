@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Tilemaps;
 
-public class MiniMapFog_WorldAccum : MonoBehaviour
+public class MiniMapFog_WorldAccum : Singleton<MiniMapFog_WorldAccum>
 {
     [Header("Refs")]
     [SerializeField] Transform player;
@@ -13,9 +13,9 @@ public class MiniMapFog_WorldAccum : MonoBehaviour
     [SerializeField] Tilemap boundsTilemap;      // 맵 전체 bounds용 타일맵
 
     [Header("Fog Texture (World Accum)")]
-    [SerializeField] int texSize = 512;
-    [SerializeField] float revealRadiusWorld = 2.0f;
-    [SerializeField] float updateInterval = 0.05f;
+    [SerializeField] int texSize = 1024;
+    [SerializeField] float revealRadiusWorld = 5.0f;
+    [SerializeField] float updateInterval = 0.1f;
 
     [Header("Fog Alpha")]
     [SerializeField, Range(0, 255)] byte unseenAlpha = 255;
@@ -26,15 +26,34 @@ public class MiniMapFog_WorldAccum : MonoBehaviour
     [SerializeField] SpriteRenderer worldFogRenderer; // WorldFogOverlay의 SpriteRenderer
     [SerializeField] Material worldFogMat;            // 인스턴스 머티리얼(중요)
 
+    [SerializeField] float revealMoveThreshold = 0.25f; // 플레이어가 이 이상 움직여야 다시 Reveal 시도 (제곱값으로 비교해서 연산 최적화)
+    [SerializeField] float saveInterval = 3f; // Fog 상태 저장 간격 (초)
+
+    bool saveDirty;
+
+    bool hasPrevReveal;
+    int prevCx, prevCy, prevRx, prevRy;
+
     Texture2D fogTex;
     Color32[] pixels;
     byte[] visited;
-    byte[] visible;
 
     float nextTime;
+    float nextSaveTime;
 
     Vector2 worldMin;
     Vector2 worldMax;
+
+    Vector2 lastRevealPos;
+
+
+    //세이브 키
+    readonly string saveKey = "Fog_Map";
+
+    protected override void Awake()
+    {
+        base.Awake();
+    }
 
     void Start()
     {
@@ -45,6 +64,7 @@ public class MiniMapFog_WorldAccum : MonoBehaviour
             return;
         }
 
+
         CalculateWorldBoundsFromTilemap(boundsTilemap, out worldMin, out worldMax);
 
         fogTex = new Texture2D(texSize, texSize, TextureFormat.RGBA32, false);
@@ -53,7 +73,6 @@ public class MiniMapFog_WorldAccum : MonoBehaviour
 
         pixels = new Color32[texSize * texSize];
         visited = new byte[texSize * texSize];
-        visible = new byte[texSize * texSize];
 
         for (int i = 0; i < pixels.Length; i++)
             pixels[i] = new Color32(0, 0, 0, unseenAlpha);
@@ -63,12 +82,18 @@ public class MiniMapFog_WorldAccum : MonoBehaviour
 
         fogImage.texture = fogTex;
 
+        //불러오기
+        LoadFog(saveKey);
+
         // 시작 위치 뚫기
         RevealWorld(player.position);
 
         // 카메라 뷰에 맞게 FogOverlay UV 잘라서 표시
         UpdateFogUVByCameraView();
-        UpdatePlayerIcon(player.position);
+
+        lastRevealPos = player.position;
+        nextTime = Time.time;
+        nextSaveTime = Time.time + saveInterval;
 
         if (worldFogRenderer != null)
         {
@@ -85,19 +110,29 @@ public class MiniMapFog_WorldAccum : MonoBehaviour
     {
         if (player == null) return;
 
-        // 미니맵 카메라가 따라오니까 매 프레임 "현재 뷰"에 맞게 Fog UV를 잘라서 보여줌
         UpdateFogUVByCameraView();
 
-        // 플레이어 아이콘은 미니맵 화면 중앙 고정(원하면 회전만)
-        UpdatePlayerIcon(player.position);
+        Vector2 pos = player.position;
 
-        if (Time.time < nextTime) return;
-        nextTime = Time.time + updateInterval;
+        // 일정 거리 이상 이동했을 때만, 일정 주기로만 Reveal
+        if (Time.time >= nextTime &&
+            (pos - lastRevealPos).sqrMagnitude >= revealMoveThreshold * revealMoveThreshold)
+        {
+            nextTime = Time.time + updateInterval;
+            lastRevealPos = pos;
+            RevealWorld(pos);
+        }
 
-        RevealWorld(player.position);
+        // 저장은 dirty일 때만
+        if (saveDirty && Time.time >= nextSaveTime)
+        {
+            nextSaveTime = Time.time + saveInterval;
+            SaveFog(saveKey);
+            saveDirty = false;
+        }
     }
 
-    // ------------------ 핵심 1: 누적 Reveal은 맵 전체 좌표 기준 ------------------
+    // 갱신 : 현재 reveal 원과 이전 reveal 원의 합집합 영역만 갱신해서 최적화
     void RevealWorld(Vector2 worldPos)
     {
         if (!WorldToUV_WholeMap(worldPos, out float u, out float v))
@@ -114,41 +149,56 @@ public class MiniMapFog_WorldAccum : MonoBehaviour
         if (rx < 1) rx = 1;
         if (ry < 1) ry = 1;
 
-        int xMin = Mathf.Max(0, cx - rx);
-        int xMax = Mathf.Min(texSize - 1, cx + rx);
-        int yMin = Mathf.Max(0, cy - ry);
-        int yMax = Mathf.Min(texSize - 1, cy + ry);
+        // 현재 reveal 사각형
+        int curXMin = Mathf.Max(0, cx - rx);
+        int curXMax = Mathf.Min(texSize - 1, cx + rx);
+        int curYMin = Mathf.Max(0, cy - ry);
+        int curYMax = Mathf.Min(texSize - 1, cy + ry);
 
-        // visible 리셋(맵 전체 기준 visible 효과 필요 없으면 이 블록 통째로 제거 가능)
-        for (int i = 0; i < visible.Length; i++)
-            visible[i] = 0;
+        // 이전 reveal과 현재 reveal의 합집합만 갱신
+        int xMin = curXMin;
+        int xMax = curXMax;
+        int yMin = curYMin;
+        int yMax = curYMax;
+
+        if (hasPrevReveal)
+        {
+            xMin = Mathf.Min(xMin, Mathf.Max(0, prevCx - prevRx));
+            xMax = Mathf.Max(xMax, Mathf.Min(texSize - 1, prevCx + prevRx));
+            yMin = Mathf.Min(yMin, Mathf.Max(0, prevCy - prevRy));
+            yMax = Mathf.Max(yMax, Mathf.Min(texSize - 1, prevCy + prevRy));
+        }
+
+        bool changed = false;
+        bool visitedChanged = false;
 
         for (int y = yMin; y <= yMax; y++)
         {
             for (int x = xMin; x <= xMax; x++)
             {
+                int idx = y * texSize + x;
+
+                // 현재 reveal 원 안에 있는지
                 float dx = (x - cx) / (float)rx;
                 float dy = (y - cy) / (float)ry;
                 float d = Mathf.Sqrt(dx * dx + dy * dy);
-                if (d > 1f) continue;
+                bool inCurrentReveal = d <= 1f;
 
-                int idx = y * texSize + x;
-                visible[idx] = 1;
-                visited[idx] = 1;
-            }
-        }
+                if (inCurrentReveal && visited[idx] == 0)
+                {
+                    visited[idx] = 1;
+                    visitedChanged = true;
+                }
 
-        bool changed = false;
-        for (int i = 0; i < pixels.Length; i++)
-        {
-            byte a = unseenAlpha;
-            if (visited[i] == 1) a = visitedAlpha;
-            if (visible[i] == 1) a = visibleAlpha;
+                byte a = unseenAlpha;
+                if (visited[idx] == 1) a = visitedAlpha;
+                if (inCurrentReveal) a = visibleAlpha;
 
-            if (pixels[i].a != a)
-            {
-                pixels[i].a = a;
-                changed = true;
+                if (pixels[idx].a != a)
+                {
+                    pixels[idx].a = a;
+                    changed = true;
+                }
             }
         }
 
@@ -157,8 +207,18 @@ public class MiniMapFog_WorldAccum : MonoBehaviour
             fogTex.SetPixels32(pixels);
             fogTex.Apply(false);
         }
+
+        if (visitedChanged)
+            saveDirty = true;
+
+        prevCx = cx;
+        prevCy = cy;
+        prevRx = rx;
+        prevRy = ry;
+        hasPrevReveal = true;
     }
 
+    // 카메라 뷰는 맵 전체 좌표 기준으로 UV(0..1) 변환, 맵 전체에 대한 상대 위치 계산
     bool WorldToUV_WholeMap(Vector2 worldPos, out float u, out float v)
     {
         float w = worldMax.x - worldMin.x;
@@ -178,7 +238,7 @@ public class MiniMapFog_WorldAccum : MonoBehaviour
         return true;
     }
 
-    // ------------------ 핵심 2: FogOverlay는 카메라 뷰 영역만 "잘라서" 표시 ------------------
+    // 카메라 뷰를 맵 전체 UV(0..1)로 변환해서 RawImage.uvRect로 잘라 보여줌
     void UpdateFogUVByCameraView()
     {
         // 카메라 뷰를 "맵 전체 UV(0..1)"로 변환해서 RawImage.uvRect로 잘라 보여줌
@@ -208,19 +268,8 @@ public class MiniMapFog_WorldAccum : MonoBehaviour
         fogImage.uvRect = new Rect(uMin, vMin, uW, vH);
     }
 
-    // ------------------ 플레이어 아이콘 ------------------
-    void UpdatePlayerIcon(Vector2 worldPos)
-    {
-        if (playerIcon == null) return;
 
-        // 미니맵 카메라가 플레이어를 따라오면, 아이콘을 중앙에 고정하는 게 일반적
-        playerIcon.anchoredPosition = Vector2.zero;
-
-        // "방향"을 표시하고 싶으면 player의 facing으로 회전만 줘라.
-        // playerIcon.localRotation = ...
-    }
-
-    static void CalculateWorldBoundsFromTilemap(Tilemap tm, out Vector2 min, out Vector2 max)
+    void CalculateWorldBoundsFromTilemap(Tilemap tm, out Vector2 min, out Vector2 max)
     {
         var cb = tm.cellBounds;
         Vector3Int cmin = cb.min;
@@ -238,5 +287,47 @@ public class MiniMapFog_WorldAccum : MonoBehaviour
 
         min = new Vector2(minX, minY);
         max = new Vector2(maxX, maxY);
+    }
+
+    public void SaveFog(string key)
+    {
+        if (string.IsNullOrEmpty(key)) return;
+        if (visited == null || visited.Length == 0) return;
+
+        string b64 = System.Convert.ToBase64String(visited);
+        PlayerPrefs.SetString(key, b64);
+        PlayerPrefs.Save();
+    }
+
+    public bool LoadFog(string key)
+    {
+        if (string.IsNullOrEmpty(key)) return false;
+        if (visited == null || pixels == null || fogTex == null) return false;
+        if (!PlayerPrefs.HasKey(key)) return false;
+
+        string b64 = PlayerPrefs.GetString(key);
+        if (string.IsNullOrEmpty(b64)) return false;
+
+        byte[] data = System.Convert.FromBase64String(b64);
+        if (data == null || data.Length != visited.Length) return false;
+
+        System.Buffer.BlockCopy(data, 0, visited, 0, data.Length);
+        RebuildFogFromVisited();
+        return true;
+    }
+
+    void RebuildFogFromVisited()
+    {
+        if (visited == null || pixels == null || fogTex == null) return;
+
+        for (int i = 0; i < pixels.Length; i++)
+        {
+            byte a = unseenAlpha;
+            if (visited[i] == 1) a = visitedAlpha;
+            pixels[i].a = a;
+        }
+
+        fogTex.SetPixels32(pixels);
+        fogTex.Apply(false);
     }
 }
