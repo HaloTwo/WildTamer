@@ -1,10 +1,32 @@
-using TMPro;
 using UnityEngine;
+
+public enum UnitState
+{
+    Default,
+    EnemyAlive,
+    Corpse,
+    AllyAlive
+}
+
+public enum UnitType
+{
+    Default,
+    Elite,
+    Boss
+}
+public enum UnitKey
+{
+    None = 0,
+
+    Merchant,
+    Peasant,
+    Thief,
+    Priest,
+    Knight,
+}
 
 public class UnitStateController : MonoBehaviour
 {
-    public enum UnitState { Default, EnemyAlive, Corpse, AllyAlive }
-    public enum UnitType { Default, Boss }
 
     [Header("Refs")]
     [SerializeField] CombatAgent combat;
@@ -32,7 +54,8 @@ public class UnitStateController : MonoBehaviour
     CircleCollider2D circleCollider;
 
     UnitState state;
-    UnitType type;
+    [SerializeField]UnitType unitType;
+    [SerializeField]UnitKey unitKey;
 
 
     PlayerSquadController playerSquad;
@@ -260,12 +283,8 @@ public class UnitStateController : MonoBehaviour
     {
         if (state != UnitState.Corpse) return;
 
-        Debug.Log("Rrrr");
-
         // 플레이어만 반응
         if (!collision.CompareTag("Player")) return;
-
-        Debug.Log("Rrrr2");
 
         corpseUI.SetActive(true);
     }
@@ -274,6 +293,7 @@ public class UnitStateController : MonoBehaviour
     {
         if (state != UnitState.Corpse) return;
 
+        // 플레이어만 반응
         if (!collision.CompareTag("Player")) return;
 
         corpseUI.SetActive(false);

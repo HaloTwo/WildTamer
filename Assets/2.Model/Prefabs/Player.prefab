@@ -154,7 +154,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9ac107b24e8a35247b59a8926942f9a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMover2D
-  speed: 3.5
+  speed: 3
   deadZone: 0.15
 --- !u!114 &5006181515514170367
 MonoBehaviour:

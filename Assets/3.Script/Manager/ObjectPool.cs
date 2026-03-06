@@ -4,15 +4,11 @@ using UnityEngine;
 public class ObjectPool : Singleton<ObjectPool>
 {
     [System.Serializable]
-    public class PrefabEntry
+    public class PoolEntry
     {
         public GameObject prefab;
-        public int prewarm = 10;
-        public Transform parent; 
+        public int prewarmCount = 10;
     }
-
-    [Header("Prewarm Prefabs")]
-    [SerializeField] private List<PrefabEntry> entries = new();
 
     public interface IPoolable
     {
@@ -22,91 +18,124 @@ public class ObjectPool : Singleton<ObjectPool>
 
     private class Pool
     {
+        public string key;
         public GameObject prefab;
-        public Transform parent;
-        public readonly Queue<GameObject> q = new Queue<GameObject>();
+        public Transform rootParent;
+        public readonly Queue<GameObject> queue = new Queue<GameObject>();
     }
 
-    private readonly Dictionary<GameObject, Pool> pools = new Dictionary<GameObject, Pool>(128);
+    [Header("Initial Pools")]
+    [SerializeField] private List<PoolEntry> entries = new();
+
+    private readonly Dictionary<string, Pool> poolsByKey = new Dictionary<string, Pool>(128);
+    private readonly Dictionary<GameObject, Pool> poolsByPrefab = new Dictionary<GameObject, Pool>(128);
 
     protected override void Awake()
     {
         base.Awake();
-
-        PrewarmFromEntries();
+        InitializeEntries();
     }
 
-    private void PrewarmFromEntries()
+    private void InitializeEntries()
     {
         if (entries == null || entries.Count == 0) return;
 
         for (int i = 0; i < entries.Count; i++)
         {
-            var e = entries[i];
-            if (e == null || e.prefab == null) continue;
-            Init(e.prefab, e.prewarm, e.parent);
+            PoolEntry entry = entries[i];
+            if (entry == null || entry.prefab == null) continue;
+
+            Register(entry.prefab, entry.prewarmCount);
         }
     }
 
-    public void Init(GameObject prefab, int prewarm, Transform parent = null)
+    // -------------------------
+    // Register
+    // -------------------------
+
+    public void Register(GameObject prefab, int prewarmCount = 0)
     {
         if (prefab == null) return;
 
-        var pool = EnsurePool(prefab, parent);
-        Prewarm(pool, Mathf.Max(0, prewarm));
+        Pool pool = EnsurePool(prefab);
+        Prewarm(pool, Mathf.Max(0, prewarmCount));
     }
 
-    public GameObject Get(GameObject prefab, Vector3 position, Quaternion rotation, Transform parent = null)
+    // -------------------------
+    // Get by prefab
+    // -------------------------
+
+    public GameObject Get(GameObject prefab, Vector3? position = null, Quaternion? rotation = null, Transform parent = null)
     {
         if (prefab == null) return null;
 
-        var pool = EnsurePool(prefab, parent);
-        GameObject go = pool.q.Count > 0 ? pool.q.Dequeue() : CreateNew(pool);
-
-        Transform targetParent = parent != null ? parent : pool.parent;
-        if (go.transform.parent != targetParent)
-            go.transform.SetParent(targetParent, false);
-
-        go.transform.SetPositionAndRotation(position, rotation);
-        go.SetActive(true);
-
-        var poolable = go.GetComponent<IPoolable>();
-        poolable?.OnSpawned();
-
-        return go;
+        Pool pool = EnsurePool(prefab);
+        return SpawnFromPool(pool, position, rotation, parent);
     }
 
-    public T Get<T>(GameObject prefab, Vector3 position, Quaternion rotation, Transform parent = null) where T : Component
+    public T Get<T>(GameObject prefab, Vector3? position = null, Quaternion? rotation = null, Transform parent = null) where T : Component
     {
-        var go = Get(prefab, position, rotation, parent);
-        return go ? go.GetComponent<T>() : null;
+        GameObject go = Get(prefab, position, rotation, parent);
+        return go != null ? go.GetComponent<T>() : null;
     }
+
+    // -------------------------
+    // Get by name (prefab.name)
+    // -------------------------
+
+    public GameObject Get(string prefabName, Vector3? position = null, Quaternion? rotation = null, Transform parent = null)
+    {
+        if (string.IsNullOrWhiteSpace(prefabName)) return null;
+
+        if (!poolsByKey.TryGetValue(prefabName, out Pool pool))
+        {
+            Debug.LogError($"[ObjectPool] '{prefabName}' 이름의 풀을 찾을 수 없습니다. 먼저 entries에 등록하거나 prefab으로 Get 하셈.");
+            return null;
+        }
+
+        return SpawnFromPool(pool, position, rotation, parent);
+    }
+
+    public T Get<T>(string prefabName, Vector3? position = null, Quaternion? rotation = null, Transform parent = null) where T : Component
+    {
+        GameObject go = Get(prefabName, position, rotation, parent);
+        return go != null ? go.GetComponent<T>() : null;
+    }
+
+    // -------------------------
+    // Release
+    // -------------------------
 
     public void Release(GameObject go)
     {
         if (go == null) return;
 
-        var tag = go.GetComponent<PooledObjectTag>();
-        if (tag == null || tag.prefabKey == null)
+        PooledObjectTag tag = go.GetComponent<PooledObjectTag>();
+        if (tag == null || tag.poolPrefab == null)
         {
             Destroy(go);
             return;
         }
 
-        if (!pools.TryGetValue(tag.prefabKey, out var pool))
+        if (tag.isInPool) return;
+
+        if (!poolsByPrefab.TryGetValue(tag.poolPrefab, out Pool pool))
         {
-            pool = EnsurePool(tag.prefabKey, null);
+            pool = EnsurePool(tag.poolPrefab);
         }
 
-        var poolable = go.GetComponent<IPoolable>();
+        IPoolable poolable = go.GetComponent<IPoolable>();
         poolable?.OnDespawned();
 
+        Transform tr = go.transform;
+        tr.SetParent(pool.rootParent, false);
+        tr.localPosition = Vector3.zero;
+        tr.localRotation = Quaternion.identity;
+        tr.localScale = tag.initialLocalScale;
+
         go.SetActive(false);
-
-        if (go.transform.parent != pool.parent)
-            go.transform.SetParent(pool.parent, false);
-
-        pool.q.Enqueue(go);
+        tag.isInPool = true;
+        pool.queue.Enqueue(go);
     }
 
     public void Release(PooledObjectTag tag)
@@ -115,32 +144,45 @@ public class ObjectPool : Singleton<ObjectPool>
         Release(tag.gameObject);
     }
 
-    // -------------------- Internal --------------------
+    // -------------------------
+    // Internal
+    // -------------------------
 
-    private Pool EnsurePool(GameObject prefab, Transform parent)
+    private Pool EnsurePool(GameObject prefab)
     {
-        if (pools.TryGetValue(prefab, out var existing))
+        if (prefab == null) return null;
+
+        if (poolsByPrefab.TryGetValue(prefab, out Pool existing))
         {
-            if (existing.parent == null)
-                existing.parent = parent != null ? parent : CreateDefaultParent(prefab.name);
             return existing;
         }
 
-        var pool = new Pool
+        string key = prefab.name;
+
+        if (poolsByKey.TryGetValue(key, out Pool keyPool))
         {
+            poolsByPrefab[prefab] = keyPool;
+            return keyPool;
+        }
+
+        Pool newPool = new Pool
+        {
+            key = key,
             prefab = prefab,
-            parent = parent != null ? parent : CreateDefaultParent(prefab.name),
+            rootParent = CreatePoolRoot(key)
         };
 
-        pools[prefab] = pool;
-        return pool;
+        poolsByKey[key] = newPool;
+        poolsByPrefab[prefab] = newPool;
+
+        return newPool;
     }
 
-    private Transform CreateDefaultParent(string prefabName)
+    private Transform CreatePoolRoot(string key)
     {
-        var folder = new GameObject($"{prefabName}_Pool");
-        folder.transform.SetParent(transform, false);
-        return folder.transform;
+        GameObject root = new GameObject($"[{key}]");
+        root.transform.SetParent(transform, false);
+        return root.transform;
     }
 
     private void Prewarm(Pool pool, int count)
@@ -149,20 +191,60 @@ public class ObjectPool : Singleton<ObjectPool>
 
         for (int i = 0; i < count; i++)
         {
-            var go = CreateNew(pool);
+            GameObject go = CreateNew(pool);
             go.SetActive(false);
-            pool.q.Enqueue(go);
+            go.GetComponent<PooledObjectTag>().isInPool = true;
+            pool.queue.Enqueue(go);
         }
+    }
+
+    private GameObject SpawnFromPool(Pool pool, Vector3? position, Quaternion? rotation, Transform parent)
+    {
+        if (pool == null || pool.prefab == null)
+        {
+            Debug.LogError("[ObjectPool] Pool 또는 Prefab이 유효하지 않습니다.");
+            return null;
+        }
+
+        GameObject go = pool.queue.Count > 0 ? pool.queue.Dequeue() : CreateNew(pool);
+
+        PooledObjectTag tag = go.GetComponent<PooledObjectTag>();
+        tag.isInPool = false;
+
+        Transform tr = go.transform;
+
+        if (parent != null)
+        {
+            tr.SetParent(parent, false);
+        }
+        else
+        {
+            tr.SetParent(pool.rootParent, false);
+        }
+
+        tr.position = position ?? Vector3.zero;
+        tr.rotation = rotation ?? Quaternion.identity;
+
+        go.SetActive(true);
+
+        IPoolable poolable = go.GetComponent<IPoolable>();
+        poolable?.OnSpawned();
+
+        return go;
     }
 
     private GameObject CreateNew(Pool pool)
     {
-        var go = Instantiate(pool.prefab, pool.parent);
+        GameObject go = Instantiate(pool.prefab, pool.rootParent);
         go.name = pool.prefab.name;
 
-        var tag = go.GetComponent<PooledObjectTag>();
+        PooledObjectTag tag = go.GetComponent<PooledObjectTag>();
         if (tag == null) tag = go.AddComponent<PooledObjectTag>();
-        tag.prefabKey = pool.prefab;
+
+        tag.poolPrefab = pool.prefab;
+        tag.poolName = pool.key;
+        tag.initialLocalScale = go.transform.localScale;
+        tag.isInPool = false;
 
         return go;
     }
@@ -170,13 +252,20 @@ public class ObjectPool : Singleton<ObjectPool>
 
 public class PooledObjectTag : MonoBehaviour
 {
-    public GameObject prefabKey;
+    [HideInInspector] public string poolName;
+    [HideInInspector] public GameObject poolPrefab;
+    [HideInInspector] public Vector3 initialLocalScale = Vector3.one;
+    [HideInInspector] public bool isInPool;
 
     public void ReleaseToPool()
     {
         if (ObjectPool.Instance != null)
-            ObjectPool.Instance.Release(this);
+        {
+            ObjectPool.Instance.Release(gameObject);
+        }
         else
+        {
             Destroy(gameObject);
+        }
     }
 }

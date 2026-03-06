@@ -13,6 +13,10 @@ PrefabInstance:
       value: Unit_Peasant
       objectReference: {fileID: 0}
     - target: {fileID: 908961648966390343, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: unitKey
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 908961648966390343, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
       propertyPath: hatRenderer
       value: 
       objectReference: {fileID: 3323406514248553069}
@@ -99,6 +103,10 @@ PrefabInstance:
     - target: {fileID: 1303670636407808352, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7138631436712287670, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -20
       objectReference: {fileID: 0}
     - target: {fileID: 7695309065870355487, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
       propertyPath: anim

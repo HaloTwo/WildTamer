@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class UIManager : Singleton<UIManager>
 {
@@ -23,6 +24,21 @@ public class UIManager : Singleton<UIManager>
     public void UnitCountTxtUpdate(int current, int max)
     {
         UnitCountTxt.text = $"{current} / {max}";
+    }
+
+    public void ShowEncyclopedia()
+    {
+        GameObject go = ObjectPool.Instance.Get("UI_Encyclopedia", parent: transform);
+
+        RectTransform rect = go.GetComponent<RectTransform>();
+
+        rect.localScale = Vector3.one;
+        rect.localPosition = Vector3.zero;
+        rect.anchoredPosition = Vector2.zero;
+
+        // UI 레이아웃 강제 갱신
+        LayoutRebuilder.ForceRebuildLayoutImmediate(rect);
+        Canvas.ForceUpdateCanvases();
     }
 
 

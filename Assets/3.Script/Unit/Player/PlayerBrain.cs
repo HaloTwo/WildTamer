@@ -6,13 +6,12 @@ public class PlayerBrain : MonoBehaviour
 
     [Header("Auto Target Scan")]
     [SerializeField] LayerMask enemyMask;
-
     [SerializeField] float scanRadius = 3.0f;
     [SerializeField] float scanInterval = 0.2f;
 
     Transform currentTarget;
+    public Transform CurrentTarget => currentTarget;
 
-    // GC 없는 버퍼
     readonly Collider2D[] buffer = new Collider2D[20];
     ContactFilter2D filter;
 
@@ -31,7 +30,6 @@ public class PlayerBrain : MonoBehaviour
 
     void Update()
     {
-        // 1) 지속 탐색(주기)
         if (Time.time >= nextScanTime || currentTarget == null || !currentTarget.gameObject.activeInHierarchy)
         {
             nextScanTime = Time.time + scanInterval;
@@ -40,7 +38,7 @@ public class PlayerBrain : MonoBehaviour
 
         if (currentTarget == null)
         {
-            combat.TryAttack(null); // 공격 상태 자동 OFF
+            combat.TryAttack(null);
             return;
         }
 

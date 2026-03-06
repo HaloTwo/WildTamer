@@ -903,7 +903,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 261893958}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1847853022}
+        m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
+        m_MethodName: ShowEncyclopedia
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &279367962
 GameObject:
   m_ObjectHideFlags: 0
@@ -10399,23 +10411,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ObjectPool
   entries:
   - prefab: {fileID: 3126187359914517199, guid: d10e3e1427ce00c4ca245553051a931d, type: 3}
-    prewarm: 15
-    parent: {fileID: 0}
+    prewarmCount: 10
   - prefab: {fileID: 3126187359914517199, guid: 30f649da811665a43be358808ef05c55, type: 3}
-    prewarm: 15
-    parent: {fileID: 0}
+    prewarmCount: 10
   - prefab: {fileID: 3126187359914517199, guid: 8fe64979ae7ccf449a3ac7b117ba4b75, type: 3}
-    prewarm: 15
-    parent: {fileID: 0}
+    prewarmCount: 10
   - prefab: {fileID: 3126187359914517199, guid: 10ed3cfd6a8bf7f45a7803bbb1b2fce9, type: 3}
-    prewarm: 3
-    parent: {fileID: 0}
+    prewarmCount: 10
   - prefab: {fileID: 3126187359914517199, guid: c4497cb38ff47604598ae2d019f88a28, type: 3}
-    prewarm: 3
-    parent: {fileID: 0}
+    prewarmCount: 10
   - prefab: {fileID: 7922748702353619820, guid: b935d297562027b4f88648782903b998, type: 3}
-    prewarm: 10
-    parent: {fileID: 0}
+    prewarmCount: 10
+  - prefab: {fileID: 7922748702353619820, guid: 45403cf5c75462a47b3d477b296ed3f4, type: 3}
+    prewarmCount: 10
+  - prefab: {fileID: 5789054000988375358, guid: 4801dd842d05e5340b4cc06695a13440, type: 3}
+    prewarmCount: 1
 --- !u!114 &2070138823
 MonoBehaviour:
   m_ObjectHideFlags: 0

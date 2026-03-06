@@ -4,7 +4,9 @@ using UnityEngine;
 public class PlayerSquadController : MonoBehaviour
 {
     [SerializeField] int maxAllies = 20;
+
     public readonly List<AllyBrain> allies = new();
+    public CombatAgent SharedTarget { get; private set; }
 
     [Header("Idle Ring (around player)")]
     [SerializeField] float idleBaseRadius = 1.2f;
@@ -115,5 +117,16 @@ public class PlayerSquadController : MonoBehaviour
         }
 
         return false;
+    }
+
+    public void SetSharedTarget(CombatAgent target)
+    {
+        if (target == null || target.IsDead || target.team != CombatAgent.Team.Enemy)
+        {
+            SharedTarget = null;
+            return;
+        }
+
+        SharedTarget = target;
     }
 }

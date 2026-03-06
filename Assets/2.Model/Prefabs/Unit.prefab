@@ -148,7 +148,7 @@ CircleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.4, y: 1.0000001}
+  m_Offset: {x: 0, y: 1.0000001}
   m_Radius: 1.4
 --- !u!70 &6119743956372445731
 CapsuleCollider2D:
@@ -262,6 +262,7 @@ MonoBehaviour:
   projectilePrefab: {fileID: 0}
   projectileFlightTime: 0.25
   projectileArcHeight: 0.4
+  startPoint: {fileID: 0}
 --- !u!114 &5660600815793033870
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -280,7 +281,7 @@ MonoBehaviour:
     m_Bits: 192
   scanInterval: 0.2
   detectRadius: 3
-  loseTargetRadius: 6
+  loseTargetRadius: 4
 --- !u!114 &8319951415880408710
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -293,13 +294,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ea692a40cd8607c46993e993556dcb7d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AllyBrain
-  moveSpeed: 4
+  moveSpeed: 3.5
   targetMask:
     serializedVersion: 2
     m_Bits: 256
   scanInterval: 0.2
   detectRadius: 3
-  regroupDistance: 6
+  regroupDistance: 5
+  idleHoldRadius: 1.25
   slowRadius: 1.2
   stopRadius: 0.15
   leaderAvoidRadius: 0.9
