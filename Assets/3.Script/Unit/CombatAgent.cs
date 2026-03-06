@@ -34,7 +34,7 @@ public class CombatAgent : MonoBehaviour
     [SerializeField] GameObject projectilePrefab;
     [SerializeField] float projectileFlightTime = 0.25f;
     [SerializeField] float projectileArcHeight = 0.4f;
-
+    [SerializeField] Transform startPoint;
 
 
     public float HP { get; private set; }
@@ -176,7 +176,7 @@ public class CombatAgent : MonoBehaviour
 
         if (projectilePrefab != null)
         {
-            StartCoroutine(ArcProjectileRoutine(transform.position, target));
+            StartCoroutine(ArcProjectileRoutine(startPoint.position, target));
         }
 
         return true;
@@ -212,7 +212,7 @@ public class CombatAgent : MonoBehaviour
 
             t += Time.deltaTime / dur;
 
-            Vector3 end = target.position;
+            Vector3 end = target.position + Vector3.up * 0.75f;
             Vector3 pos = Vector3.Lerp(start, end, t);
             float arc = 4f * projectileArcHeight * t * (1f - t);
             pos.y += arc;
@@ -222,7 +222,7 @@ public class CombatAgent : MonoBehaviour
             if (dir.sqrMagnitude > 0.0001f)
             {
                 float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-                proj.transform.rotation = Quaternion.Euler(0f, 0f, angle + 90f);
+                proj.transform.rotation = Quaternion.Euler(0f, 0f, angle + 270f);
             }
 
             proj.transform.position = pos;

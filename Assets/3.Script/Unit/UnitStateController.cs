@@ -4,6 +4,7 @@ using UnityEngine;
 public class UnitStateController : MonoBehaviour
 {
     public enum UnitState { Default, EnemyAlive, Corpse, AllyAlive }
+    public enum UnitType { Default, Boss }
 
     [Header("Refs")]
     [SerializeField] CombatAgent combat;
@@ -31,6 +32,9 @@ public class UnitStateController : MonoBehaviour
     CircleCollider2D circleCollider;
 
     UnitState state;
+    UnitType type;
+
+
     PlayerSquadController playerSquad;
     Animator anim;
     Rigidbody2D rb;

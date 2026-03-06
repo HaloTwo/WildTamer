@@ -122,8 +122,8 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0.75}
-  m_Size: {x: 0.5, y: 1.5052583}
+  m_Offset: {x: 0, y: 0.5}
+  m_Size: {x: 0.5, y: 1}
   m_Direction: 0
 --- !u!114 &7877307012015661280
 MonoBehaviour:
@@ -180,6 +180,7 @@ MonoBehaviour:
   projectilePrefab: {fileID: 0}
   projectileFlightTime: 0.25
   projectileArcHeight: 0.4
+  startPoint: {fileID: 0}
 --- !u!114 &4288442025183191357
 MonoBehaviour:
   m_ObjectHideFlags: 0
