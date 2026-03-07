@@ -1,3 +1,4 @@
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class PlayerBrain : MonoBehaviour
@@ -20,13 +21,20 @@ public class PlayerBrain : MonoBehaviour
     void Awake()
     {
         TryGetComponent(out combat);
-        combat.team = CombatAgent.Team.Player;
+        combat.team = Team.Player;
 
         filter = new ContactFilter2D();
         filter.SetLayerMask(enemyMask);
         filter.useLayerMask = true;
         filter.useTriggers = true;
     }
+
+    private void Start()
+    {
+        combat.PlayerDataSet();
+    }
+
+
 
     void Update()
     {

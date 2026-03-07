@@ -46,16 +46,17 @@ public class AllyBrain : BrainBase
     float leaderAvoidRadiusSqr;
     float allySeparationRadiusSqr;
 
-    public void SetupAsAlly(PlayerSquadController squadController, int index)
+    public void SetupAsAlly(int index)
     {
-        var player = GamaManager.Instance.player;
+        var player = GameManager.Instance.playerSquad;
 
         // 내 편대 인덱스 저장
         myIndex = index;
 
         // 필요한 참조 캐싱
-        squad ??= squadController;
         leader ??= player.transform;
+
+        squad ??= GameManager.Instance.playerSquad;
         playerMover ??= player.GetComponent<PlayerMover2D>();
         playerBrain ??= player.GetComponent<PlayerBrain>();
 
@@ -64,7 +65,7 @@ public class AllyBrain : BrainBase
         currentTargetAgent = null;
 
         // 팀을 아군으로 변경
-        combat.SetTeam(CombatAgent.Team.Ally);
+        combat.SetTeam(Team.Ally);
 
         // 모든 아군이 같은 프레임에 스캔/리패스하지 않도록 약간 분산
         float offset = (myIndex & 3) * 0.03f;
@@ -266,7 +267,7 @@ public class AllyBrain : BrainBase
         if (currentTargetAgent.IsDead)
             return false;
 
-        if (currentTargetAgent.team != CombatAgent.Team.Enemy)
+        if (currentTargetAgent.team != Team.Enemy)
             return false;
 
         return true;
@@ -281,7 +282,7 @@ public class AllyBrain : BrainBase
 
         if (sharedTarget != null && sharedTarget.TryGetComponent(out CombatAgent sharedAgent))
         {
-            if (!sharedAgent.IsDead && sharedAgent.team == CombatAgent.Team.Enemy)
+            if (!sharedAgent.IsDead && sharedAgent.team == Team.Enemy)
             {
                 currentTarget = sharedTarget;
                 currentTargetAgent = sharedAgent;
@@ -306,7 +307,7 @@ public class AllyBrain : BrainBase
         {
             var a = all[i];
             if (a == null || a.IsDead) continue;
-            if (a.team != CombatAgent.Team.Enemy) continue;
+            if (a.team != Team.Enemy) continue;
 
             Vector2 diff = (Vector2)a.transform.position - myPos;
             float d2 = diff.sqrMagnitude;

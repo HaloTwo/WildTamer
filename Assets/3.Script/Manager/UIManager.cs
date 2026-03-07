@@ -7,6 +7,7 @@ public class UIManager : Singleton<UIManager>
 
     [SerializeField] HpBarUI hpBarUI;
     [SerializeField] TextMeshProUGUI UnitCountTxt;
+    [SerializeField] TextMeshProUGUI CoinTxt;
 
 
     protected override void Awake()
@@ -26,20 +27,37 @@ public class UIManager : Singleton<UIManager>
         UnitCountTxt.text = $"{current} / {max}";
     }
 
+    public void SetCoinText(int coin)
+    {
+        CoinTxt.text = coin.ToString();
+    }
+
     public void ShowEncyclopedia()
     {
         GameObject go = ObjectPool.Instance.Get("UI_Encyclopedia", parent: transform);
+        SetupUI(go);
+    }
 
-        RectTransform rect = go.GetComponent<RectTransform>();
 
+    public void ShowGameOverUI()
+    {
+        GameObject go = ObjectPool.Instance.Get("UI_GameOver", parent: transform);
+        SetupUI(go);
+    }
+
+
+
+    void SetupUI(GameObject uiObj)
+    {
+        UIJoyStick.Instance.BlockInput = true;
+
+        RectTransform rect = uiObj.GetComponent<RectTransform>();
         rect.localScale = Vector3.one;
         rect.localPosition = Vector3.zero;
         rect.anchoredPosition = Vector2.zero;
 
-        // UI 레이아웃 강제 갱신
         LayoutRebuilder.ForceRebuildLayoutImmediate(rect);
         Canvas.ForceUpdateCanvases();
     }
-
 
 }

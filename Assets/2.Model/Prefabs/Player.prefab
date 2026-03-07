@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 3558230977023868316}
   - component: {fileID: 5006181515514170367}
   - component: {fileID: 4288442025183191357}
+  - component: {fileID: 7638039743876595980}
   m_Layer: 6
   m_Name: Player
   m_TagString: Player
@@ -201,6 +202,33 @@ MonoBehaviour:
   combatSlotStepRad: 0.55
   combatTrySlots: 12
   combatOccupyRadius: 0.35
+--- !u!114 &7638039743876595980
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000013261649242}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae80e51a5554347489f26bd5e142f39c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UnitVisualFeedback
+  combat: {fileID: 5006181515514170367}
+  unitState: {fileID: 0}
+  renderers:
+  - {fileID: 6262777902772427877}
+  - {fileID: 5654073339512140775}
+  - {fileID: 4516300608102532150}
+  - {fileID: 4846450887750539913}
+  - {fileID: 4844837118120179972}
+  - {fileID: 3407251678109764637}
+  - {fileID: 2952103658065085622}
+  hitFlashDuration: 0.1
+  hitFlashColor: {r: 1, g: 0.3, b: 0.3, a: 1}
+  fadeDuration: 0.6
+  fadeDownDistance: 0.15
+  fadeScaleMultiplier: 0.95
 --- !u!1 &17243134457649702
 GameObject:
   m_ObjectHideFlags: 0

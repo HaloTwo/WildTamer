@@ -19,11 +19,6 @@ public class PlayerSquadController : MonoBehaviour
     [SerializeField] int combatTrySlots = 12;         // 자리 없으면 회전하며 최대 시도 횟수
     [SerializeField] float combatOccupyRadius = 0.35f;// 이 반경 안에 다른 Ally 있으면 점유로 판단
 
-    private void Start()
-    {
-        UIManager.Instance.UnitCountTxtUpdate(allies.Count, maxAllies);
-    }
-
     public bool Register(AllyBrain ally)
     {
         if (allies.Count >= maxAllies) return false;
@@ -31,7 +26,7 @@ public class PlayerSquadController : MonoBehaviour
 
         allies.Add(ally);
 
-        ally.SetupAsAlly(this, allies.Count - 1);
+        ally.SetupAsAlly(allies.Count - 1);
         RefreshIndices();
 
         return true;
@@ -42,6 +37,7 @@ public class PlayerSquadController : MonoBehaviour
         if (ally == null) return;
 
         allies.Remove(ally);
+
         RefreshIndices();
     }
 
@@ -121,7 +117,7 @@ public class PlayerSquadController : MonoBehaviour
 
     public void SetSharedTarget(CombatAgent target)
     {
-        if (target == null || target.IsDead || target.team != CombatAgent.Team.Enemy)
+        if (target == null || target.IsDead || target.team != Team.Enemy)
         {
             SharedTarget = null;
             return;
@@ -129,4 +125,53 @@ public class PlayerSquadController : MonoBehaviour
 
         SharedTarget = target;
     }
+
+    /// <summary>
+    /// 저장된 currentAllies를 읽어서 아군 복구
+    /// </summary>
+    public void RestoreSavedAllies(List<UnitKey> savedKeys)
+    {
+        if (savedKeys == null || savedKeys.Count == 0)
+        {
+            UIManager.Instance.UnitCountTxtUpdate(allies.Count, maxAllies);
+            return;
+        }
+
+
+        int restoreCount = Mathf.Min(savedKeys.Count, maxAllies);
+
+        for (int i = 0; i < restoreCount; i++)
+        {
+            SpawnSavedAlly(savedKeys[i], i);
+        }
+
+        RefreshIndices();
+    }
+
+    void SpawnSavedAlly(UnitKey unitKey, int orderIndex)
+    {
+        if (unitKey == UnitKey.None)
+            return;
+
+        string poolKey = unitKey.ToString();
+
+        // 네 ObjectPool API에 맞춰 수정
+        GameObject go = ObjectPool.Instance.Get(poolKey, transform.position, Quaternion.identity);
+        if (go == null)
+        {
+            Debug.LogWarning($"[PlayerSquadController] 풀에서 못 찾음: {poolKey}");
+            return;
+        }
+
+        UnitStateController usc = go.GetComponent<UnitStateController>();
+        if (usc == null)
+        {
+            Debug.LogWarning($"[PlayerSquadController] UnitStateController 없음: {poolKey}");
+            ObjectPool.Instance.Release(go);
+            return;
+        }
+
+        usc.SpawnAsAlly();
+    }
+
 }

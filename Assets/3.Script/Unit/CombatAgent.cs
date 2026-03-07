@@ -5,10 +5,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+
 public class CombatAgent : MonoBehaviour
 {
-    public enum Team { Player, Ally, Enemy }
-
     [HideInInspector] public Team team = Team.Enemy;
 
     [Header("플레이어 제외 Bar")]
@@ -16,11 +15,10 @@ public class CombatAgent : MonoBehaviour
     [SerializeField] GameObject hpBar;
     Tween hideTween;
 
-    [Header("Stats")]
-    [SerializeField] float maxHP = 20f;
-    [SerializeField] float damage = 5f;
-    [SerializeField] float attackRange = 1.0f;
-    [SerializeField] float attackCooldown = 0.8f;
+    float maxHP = 20f;
+    float damage = 5f;
+    float attackRange = 1.0f;
+    float attackCooldown = 0.8f;
     public float TameChance = 0.6f;
 
     float nextAttackTime;
@@ -41,6 +39,7 @@ public class CombatAgent : MonoBehaviour
     public bool IsDead => HP <= 0f;
     public float AttackRange => attackRange;
 
+    public event Action<CombatAgent, float> OnDamaged;
     public event Action<CombatAgent> OnDead;
 
     static readonly List<CombatAgent> s_all = new();
@@ -63,10 +62,29 @@ public class CombatAgent : MonoBehaviour
     }
     // ---------------------------------------------------------------------------------
 
-    private void Start()
+
+    public void DataSetup(UnitKey unitKey)
     {
-        ResetRuntime();
+        UnitDataSO data = GameManager.Instance.GetUnitData(unitKey);
+
+        maxHP = data.maxHP;
+        damage = data.attackDamage;
+        attackCooldown = data.attackCooldown;
+        attackRange = data.attackRange;
+        TameChance = data.tameChance;
     }
+
+    public void PlayerDataSet()
+    {
+        maxHP = 200;
+        damage = 10;
+        attackCooldown = 1;
+        attackRange = 3;
+        TameChance = 1;
+
+        ResetRuntime(true);
+    }
+
 
     public void SetTeam(Team newTeam) => team = newTeam;
 
@@ -107,7 +125,7 @@ public class CombatAgent : MonoBehaviour
         {
             UIManager.Instance.SetHpBar(HP, maxHP);
             return;
-        }       
+        }
 
         hideTween?.Kill();
         hpBar.SetActive(true);
@@ -129,6 +147,8 @@ public class CombatAgent : MonoBehaviour
 
         ShowHPBar();
 
+        OnDamaged?.Invoke(this, amount);
+
         if (HP <= 0f)
         {
             HP = 0f;
@@ -141,11 +161,16 @@ public class CombatAgent : MonoBehaviour
             if (team.Equals(Team.Player))
             {
                 UIManager.Instance.SetHpBar(HP, maxHP);
+                UIManager.Instance.ShowGameOverUI();
+                anim.SetTrigger("IsDead");
                 return;
             }
 
             hpBar.SetActive(false);
+            return;
         }
+
+        if (team.Equals(Team.Player)) UIManager.Instance.SetHpBar(HP, maxHP);
     }
 
     public bool IsInRange(Transform target)

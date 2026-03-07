@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c64079d8bb73cb64085b3730550bf912, type: 3}
+  m_Name: Boss_Priest
+  m_EditorClassIdentifier: Assembly-CSharp::UnitDefinitionSO
+  UnitType: 2
+  UnitKey: 4
+  moveSpeed: 1
+  maxHP: 2000
+  attackDamage: 3
+  attackRange: 3
+  attackCooldown: 0.25
+  tameChance: 1

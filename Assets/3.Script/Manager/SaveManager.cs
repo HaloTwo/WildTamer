@@ -1,12 +1,18 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
-[System.Serializable]
-public class SaveData
+[Serializable]
+public class UserData
 {
-    public int playerHp;
-    public int allyCount;
+    public int coin;
+
+    // 저장 시점의 현재 동행 아군 스냅샷
+    public List<UnitKey> currentAllies = new();
+
+    // 도감 해금
+    public List<UnitKey> unlockedUnits = new();
 }
 
 public enum SaveName
@@ -31,7 +37,7 @@ public class SaveManager
             _ => "save.json"
         };
 
-        Debug.Log($"Save path: {Path.Combine(Application.persistentDataPath, fileName)}");
+        //Debug.Log($"Save path: {Path.Combine(Application.persistentDataPath, fileName)}");
 
         return Path.Combine(Application.persistentDataPath, fileName);
     }
