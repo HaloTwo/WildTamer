@@ -185,7 +185,6 @@ public class CombatAgent : MonoBehaviour
         if (IsDead) return false;
         if (!target) { pendingTarget = null; return false; }
 
-
         if (!target.TryGetComponent(out CombatAgent other) || other.IsDead)
             return false;
         if (other.team == team)
@@ -199,23 +198,48 @@ public class CombatAgent : MonoBehaviour
 
         anim.SetTrigger(attackTriggerName);
 
-        if (projectilePrefab != null)
-        {
-            StartCoroutine(ArcProjectileRoutine(startPoint.position, target));
-        }
-
         return true;
     }
 
     // 근접공격이면 attack 애니 중간에 AnimationEvent로 이거 호출
-    public void ApplyDamageEvent()
+    public void OnAttackHitEvent()
     {
         if (IsDead) return;
         if (!pendingTarget) { pendingTarget = null; return; }
-        if (!IsInRange(pendingTarget)) { pendingTarget = null; return; }
 
-        if (!pendingTarget.TryGetComponent(out CombatAgent other) || other.IsDead) return;
-        if (other == null || other.IsDead || other.team == team) { pendingTarget = null; return; }
+        if (!pendingTarget.TryGetComponent(out CombatAgent other) || other.IsDead)
+        {
+            pendingTarget = null;
+            return;
+        }
+
+        if (other.team == team)
+        {
+            pendingTarget = null;
+            return;
+        }
+
+        // 원거리면 투사체 발사
+        if (projectilePrefab != null)
+        {
+            if (startPoint == null)
+            {
+                Debug.LogWarning($"{name} : projectile startPoint is null");
+                pendingTarget = null;
+                return;
+            }
+
+            StartCoroutine(ArcProjectileRoutine(startPoint.position, pendingTarget));
+            return;
+        }
+
+        // 근접이면 이벤트 시점에 데미지 적용
+        if (!IsInRange(pendingTarget))
+        {
+            anim.ResetTrigger(attackTriggerName); 
+            pendingTarget = null;
+            return;
+        }
 
         other.TakeDamage(damage);
         pendingTarget = null;

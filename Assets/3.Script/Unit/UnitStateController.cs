@@ -1,3 +1,4 @@
+using DG.Tweening;
 using System;
 using UnityEngine;
 
@@ -255,21 +256,11 @@ public class UnitStateController : MonoBehaviour
     {
         bool tameSuccess = UnityEngine.Random.value <= combat.TameChance;
 
-        if (!tameSuccess)
-        {
-            corpseUI.SetActive(false);
-            OnRequestFadeOutAndRelease?.Invoke();
-            return;
-        }
-
-        state = UnitState.Corpse;
-
         enemyBrain.enabled = false;
         allyBrain.enabled = false;
         combat.enabled = false;
 
         capsuleCollider.enabled = false;
-        circleCollider.enabled = true;
 
         // 죽는 모션 방향 고정
         Vector3 s = transform.localScale;
@@ -280,6 +271,21 @@ public class UnitStateController : MonoBehaviour
         anim.ResetTrigger("IsAttack");
         anim.ResetTrigger("IsTaming");
         anim.SetTrigger("IsDead");
+
+        if (!tameSuccess)
+        {
+            corpseUI.SetActive(false);
+            DOVirtual.DelayedCall(0.5f, () =>
+            {
+                OnRequestFadeOutAndRelease?.Invoke();
+            });
+            return;
+        }
+
+
+
+        state = UnitState.Corpse;
+        circleCollider.enabled = true;
     }
 
     /// <summary>

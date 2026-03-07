@@ -10,7 +10,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 756884263976810242, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
       propertyPath: m_Name
-      value: BossUnit_Knight
+      value: Knight
       objectReference: {fileID: 0}
     - target: {fileID: 832393811283570561, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
       propertyPath: m_Offset.x
@@ -33,6 +33,18 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 3086392725855504657}
     - target: {fileID: 908961648966390343, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: allyHatSprite
+      value: 
+      objectReference: {fileID: 21300288, guid: 15b2d2faaecad4bfb9edc6585d94f509, type: 3}
+    - target: {fileID: 908961648966390343, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: allyBodySprite
+      value: 
+      objectReference: {fileID: 21300030, guid: 15b2d2faaecad4bfb9edc6585d94f509, type: 3}
+    - target: {fileID: 908961648966390343, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: enemyHatSprite
+      value: 
+      objectReference: {fileID: 21300286, guid: 15b2d2faaecad4bfb9edc6585d94f509, type: 3}
+    - target: {fileID: 908961648966390343, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
       propertyPath: allyHatRenderer
       value: 
       objectReference: {fileID: 21300288, guid: 15b2d2faaecad4bfb9edc6585d94f509, type: 3}
@@ -40,6 +52,10 @@ PrefabInstance:
       propertyPath: backArmRenderer
       value: 
       objectReference: {fileID: 3086392725939807985}
+    - target: {fileID: 908961648966390343, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: enemyBodySprite
+      value: 
+      objectReference: {fileID: 21300028, guid: 15b2d2faaecad4bfb9edc6585d94f509, type: 3}
     - target: {fileID: 908961648966390343, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
       propertyPath: allybodyRenderer
       value: 

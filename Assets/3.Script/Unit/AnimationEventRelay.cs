@@ -7,6 +7,7 @@ public class AnimationEventRelay : MonoBehaviour
 
     public void ApplyDamageEvent()
     {
-        combatAgent.ApplyDamageEvent();
+        combatAgent.OnAttackHitEvent();
     }
+
 }
