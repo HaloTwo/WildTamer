@@ -16,7 +16,7 @@ MonoBehaviour:
   UnitKey: 5
   moveSpeed: 1
   maxHP: 2000
-  attackDamage: 20
-  attackRange: 2
+  attackDamage: 25
+  attackRange: 1.5
   attackCooldown: 2
   tameChance: 1

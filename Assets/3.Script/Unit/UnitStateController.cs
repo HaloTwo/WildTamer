@@ -197,6 +197,8 @@ public class UnitStateController : MonoBehaviour
     /// </summary>
     public void SpawnAsAlly(bool startSpawn = false)
     {
+
+
         state = UnitState.AllyAlive;
         gameObject.layer = allyLayer;
 

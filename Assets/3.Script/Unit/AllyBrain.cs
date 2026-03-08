@@ -177,13 +177,21 @@ public class AllyBrain : BrainBase
                 else
                 {
                     FaceTo(currentTarget.position);
-                    combat.TryAttack(currentTarget);
+
+                    if (!combat.TryUseSkill(currentTarget))
+                    {
+                        combat.TryAttack(currentTarget);
+                    }
+
                     desired = Vector2.zero;
                     desiredIsDirection = false;
+
                 }
 
                 desired += GetAllySeparation(myPos);
                 desired += GetLeaderAvoid(myPos, leaderPos, leaderFwd);
+
+
 
                 ApplyAnimAndFlip(desired);
                 return;

@@ -234,7 +234,7 @@ public class CombatAgent : MonoBehaviour
 
         if (!target.TryGetComponent(out CombatAgent other) || other.IsDead)
             return false;
-        if (other.team == team)
+        if (IsFriendly(other.team))
             return false;
         if (!IsInRange(target)) { pendingTarget = null; return false; }
 
@@ -248,6 +248,54 @@ public class CombatAgent : MonoBehaviour
         return true;
     }
 
+  
+
+    public void OnAttackHitEvent()
+    {
+        if (IsDead) return;
+        if (!pendingTarget) { pendingTarget = null; return; }
+
+        if (!pendingTarget.TryGetComponent(out CombatAgent other) || other.IsDead)
+        {
+            pendingTarget = null;
+            return;
+        }
+
+        if (IsFriendly(other.team))
+        {
+            pendingTarget = null;
+            return;
+        }
+
+        if (projectilePrefab != null)
+        {
+            if (startPoint == null)
+            {
+                Debug.LogWarning($"{name} : projectile startPoint is null");
+                pendingTarget = null;
+                return;
+            }
+
+            StartCoroutine(ArcProjectileRoutine(startPoint.position, pendingTarget));
+            return;
+        }
+
+        if (!IsInRange(pendingTarget))
+        {
+            anim.ResetTrigger(attackTriggerName);
+            pendingTarget = null;
+            return;
+        }
+
+        other.TakeDamage(damage);
+        pendingTarget = null;
+
+        if (team.Equals(Team.Player))
+            SoundManager.Instance.PlaySFX(SFXType.PlayerAttack);
+    }
+
+    #region Skills
+
     public bool TryUseSkill(Transform target)
     {
         if (skillType == SkillType.None) return false;
@@ -258,7 +306,7 @@ public class CombatAgent : MonoBehaviour
         if (!target.TryGetComponent(out CombatAgent other) || other.IsDead)
             return false;
 
-        if (other.team == team)
+        if (IsFriendly(other.team))
             return false;
 
         if (!IsSkillInRange(target))
@@ -311,52 +359,6 @@ public class CombatAgent : MonoBehaviour
         float r = skillCastRange;
         return ((Vector2)target.position - (Vector2)transform.position).sqrMagnitude <= r * r;
     }
-
-    public void OnAttackHitEvent()
-    {
-        if (IsDead) return;
-        if (!pendingTarget) { pendingTarget = null; return; }
-
-        if (!pendingTarget.TryGetComponent(out CombatAgent other) || other.IsDead)
-        {
-            pendingTarget = null;
-            return;
-        }
-
-        if (other.team == team)
-        {
-            pendingTarget = null;
-            return;
-        }
-
-        if (projectilePrefab != null)
-        {
-            if (startPoint == null)
-            {
-                Debug.LogWarning($"{name} : projectile startPoint is null");
-                pendingTarget = null;
-                return;
-            }
-
-            StartCoroutine(ArcProjectileRoutine(startPoint.position, pendingTarget));
-            return;
-        }
-
-        if (!IsInRange(pendingTarget))
-        {
-            anim.ResetTrigger(attackTriggerName);
-            pendingTarget = null;
-            return;
-        }
-
-        other.TakeDamage(damage);
-        pendingTarget = null;
-
-        if (team.Equals(Team.Player))
-            SoundManager.Instance.PlaySFX(SFXType.PlayerAttack);
-    }
-
-
     IEnumerator CoMagicRain(Transform target)
     {
         if (target == null)
@@ -404,7 +406,7 @@ public class CombatAgent : MonoBehaviour
         {
             CombatAgent victim = hitTargets[i];
             if (victim == null || victim.IsDead) continue;
-            if (victim.team == team) continue;
+            if (IsFriendly(victim.team)) continue;
 
             StartCoroutine(CoMagicRainHit(victim));
         }
@@ -477,7 +479,7 @@ public class CombatAgent : MonoBehaviour
         {
             CombatAgent other = all[i];
             if (other == null || other == this || other.IsDead) continue;
-            if (other.team == team) continue;
+            if (IsFriendly(other.team)) continue;
 
             Vector2 diff = (Vector2)other.transform.position - center;
             if (diff.sqrMagnitude > radiusSqr) continue;
@@ -495,6 +497,8 @@ public class CombatAgent : MonoBehaviour
         if (fx != null)
             ObjectPool.Instance.Release(fx);
     }
+
+#endregion
 
     IEnumerator ArcProjectileRoutine(Vector3 start, Transform target)
     {
@@ -539,5 +543,50 @@ public class CombatAgent : MonoBehaviour
         }
 
         ObjectPool.Instance.Release(proj);
+    }
+
+
+    bool IsFriendly(Team otherTeam)
+    {
+        if (team == Team.Enemy)
+            return otherTeam == Team.Enemy;
+
+        // Player, Ally는 같은 편 취급
+        return otherTeam == Team.Player || otherTeam == Team.Ally;
+    }
+
+
+
+    public void Heal(float amount)
+    {
+        if (IsDead) return;
+        if (amount <= 0f) return;
+
+        HP = Mathf.Min(HP + amount, maxHP);
+
+        if (team == Team.Player)
+        {
+            UIManager.Instance?.SetHpBar(HP, maxHP);
+        }
+        else
+        {
+            ShowHPBar();
+        }
+    }
+
+    public void FullHeal()
+    {
+        if (IsDead) return;
+
+        HP = maxHP;
+
+        if (team == Team.Player)
+        {
+            UIManager.Instance?.SetHpBar(HP, maxHP);
+        }
+        else
+        {
+            ShowHPBar();
+        }
     }
 }
