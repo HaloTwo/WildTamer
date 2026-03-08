@@ -107,8 +107,8 @@ public class CombatAgent : MonoBehaviour
 
     public void PlayerDataSet()
     {
-        maxHP = 200;
-        damage = 10;
+        maxHP = 400;
+        damage = 20;
         attackCooldown = 1;
         attackRange = 3;
         TameChance = 1;

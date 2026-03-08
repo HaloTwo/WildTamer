@@ -168,6 +168,10 @@ PrefabInstance:
       propertyPath: shockwaveRadius
       value: 3
       objectReference: {fileID: 0}
+    - target: {fileID: 7695309065870355487, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: shockwaveFxPrefab
+      value: 
+      objectReference: {fileID: 7922748702353619820, guid: 696ced46a1760a74a9f8998929a95b02, type: 3}
     - target: {fileID: 8511560829642676089, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
       propertyPath: m_AnchoredPosition.x
       value: 0

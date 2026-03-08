@@ -56,13 +56,13 @@ public class GameManager : Singleton<GameManager>
 
     float deltaTime;
 
-    void Update()
-    {
-        deltaTime += (Time.unscaledDeltaTime - deltaTime) * 0.1f;
+    //void Update()
+    //{
+    //    deltaTime += (Time.unscaledDeltaTime - deltaTime) * 0.1f;
 
-        float fps = 1f / deltaTime;
-        fpsText.text = "FPS : " + Mathf.Ceil(fps);
-    }
+    //    float fps = 1f / deltaTime;
+    //    fpsText.text = "FPS : " + Mathf.Ceil(fps);
+    //}
 
     protected override void Awake()
     {

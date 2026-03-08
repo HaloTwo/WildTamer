@@ -37,7 +37,7 @@ public class SaveManager
             _ => "save.json"
         };
 
-        Debug.Log($"Save path: {Path.Combine(Application.persistentDataPath, fileName)}");
+        //Debug.Log($"Save path: {Path.Combine(Application.persistentDataPath, fileName)}");
 
         return Path.Combine(Application.persistentDataPath, fileName);
     }

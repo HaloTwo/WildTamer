@@ -19,4 +19,4 @@ MonoBehaviour:
   attackDamage: 5
   attackRange: 3
   attackCooldown: 1
-  tameChance: 0.6
+  tameChance: 0.65

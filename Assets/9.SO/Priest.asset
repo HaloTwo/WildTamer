@@ -15,8 +15,8 @@ MonoBehaviour:
   UnitType: 2
   UnitKey: 4
   moveSpeed: 1
-  maxHP: 1500
+  maxHP: 1000
   attackDamage: 3
   attackRange: 3
-  attackCooldown: 0.5
+  attackCooldown: 0.6
   tameChance: 1
