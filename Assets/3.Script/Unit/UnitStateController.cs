@@ -2,6 +2,7 @@ using DG.Tweening;
 using System;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UI;
 
 
 public class UnitStateController : MonoBehaviour
@@ -28,6 +29,7 @@ public class UnitStateController : MonoBehaviour
 
     [Header("Corpse UI (Canvas under Unit)")]
     [SerializeField] GameObject corpseUI;
+    [SerializeField] Button recruitBtn;
 
     UnitType unitType;
     public UnitType UnitType => unitType;
@@ -318,6 +320,9 @@ public class UnitStateController : MonoBehaviour
     /// </summary>
     public void OnClickTame()
     {
+        if (!UpdateRecruitButton())
+            return;
+
         corpseUI.SetActive(false);
         SpawnAsAlly();
     }
@@ -341,8 +346,8 @@ public class UnitStateController : MonoBehaviour
         if (state != UnitState.Corpse) return;
         if (!collision.CompareTag("Player")) return;
 
-        if (corpseUI != null)
-            corpseUI.SetActive(true);
+        UpdateRecruitButton();
+        corpseUI.SetActive(true);
     }
 
     private void OnTriggerExit2D(Collider2D collision)
@@ -350,7 +355,13 @@ public class UnitStateController : MonoBehaviour
         if (state != UnitState.Corpse) return;
         if (!collision.CompareTag("Player")) return;
 
-        if (corpseUI != null)
-            corpseUI.SetActive(false);
+        UpdateRecruitButton();
+        corpseUI.SetActive(false);
+    }
+
+    bool UpdateRecruitButton()
+    {
+        recruitBtn.interactable = !GameManager.Instance.playerSquad.IsFull;
+        return recruitBtn.interactable;
     }
 }

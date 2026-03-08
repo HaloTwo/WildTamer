@@ -3,9 +3,14 @@ using UnityEngine;
 
 public class PlayerSquadController : MonoBehaviour
 {
-    [SerializeField] int maxAllies = 20;
+    [SerializeField] int maxAllies = 3;
 
     public readonly List<AllyBrain> allies = new();
+
+    public int MaxAllies => maxAllies;
+    public int CurrentAllyCount => allies.Count;
+    public bool IsFull => allies.Count >= maxAllies;
+
     public CombatAgent SharedTarget { get; private set; }
 
     [Header("Idle Ring (around player)")]

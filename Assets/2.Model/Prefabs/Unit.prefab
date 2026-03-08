@@ -240,6 +240,7 @@ MonoBehaviour:
   allyBodySprite: {fileID: 0}
   allyHatSprite: {fileID: 0}
   corpseUI: {fileID: 7870921511461462464}
+  recruitBtn: {fileID: 4801599853163814680}
   unitKey: 0
 --- !u!114 &7695309065870355487
 MonoBehaviour:
@@ -262,6 +263,20 @@ MonoBehaviour:
   projectileFlightTime: 0.25
   projectileArcHeight: 0.4
   startPoint: {fileID: 0}
+  skillType: 0
+  skillCooldown: 10
+  skillCastRange: 3
+  magicRainRadius: 2.5
+  magicRainMaxTargets: 5
+  magicRainDelay: 0.6
+  magicRainDamage: 8
+  magicRainProjectilePrefab: {fileID: 0}
+  magicRainFallHeight: 4
+  magicRainFlightTime: 0.35
+  shockwaveRadius: 2.2
+  shockwaveDelay: 0.35
+  shockwaveDamage: 15
+  shockwaveFxPrefab: {fileID: 0}
 --- !u!114 &5660600815793033870
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -432,13 +447,13 @@ MonoBehaviour:
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
-  m_Transition: 0
+  m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_PressedColor: {r: 1, g: 1, b: 1, a: 1}
     m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_DisabledColor: {r: 0.254717, g: 0.254717, b: 0.254717, a: 1}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
   m_SpriteState:
@@ -833,7 +848,7 @@ MonoBehaviour:
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
-  m_Transition: 0
+  m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
