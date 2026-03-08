@@ -165,7 +165,14 @@ public class EnemyBrain : BrainBase
             desiredMove = Vector2.zero;
             FaceTo(currentTarget.position);
             SetMoveAnim(false);
-            combat.TryAttack(currentTarget);
+
+            if (!combat.IsSkillCasting)
+            {
+                if (!combat.TryUseSkill(currentTarget))
+                {
+                    combat.TryAttack(currentTarget);
+                }
+            }
         }
     }
 

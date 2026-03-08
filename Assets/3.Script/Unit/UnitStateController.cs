@@ -1,5 +1,6 @@
 using DG.Tweening;
 using System;
+using Unity.VisualScripting;
 using UnityEngine;
 
 
@@ -27,7 +28,7 @@ public class UnitStateController : MonoBehaviour
 
     [Header("Corpse UI (Canvas under Unit)")]
     [SerializeField] GameObject corpseUI;
-    
+
     UnitType unitType;
     public UnitType UnitType => unitType;
 
@@ -83,11 +84,6 @@ public class UnitStateController : MonoBehaviour
         // CombatAgent는 "죽었다" 이벤트만 발행.
         // 상태 전환 책임은 UnitStateController가 가진다.
         combat.OnDead += OnDead;
-    }
-
-    private void Start()
-    {
-        combat.DataSetup(unitKey);
     }
 
     void OnDestroy()
@@ -177,7 +173,7 @@ public class UnitStateController : MonoBehaviour
         enemyBrain.enabled = true;
         enemyBrain.EnemyBrainSet();
 
-
+        combat.DataSetup(unitKey);
         combat.ResetRuntime(fullHeal: true);
 
         anim.ResetControllerState(true);
@@ -197,7 +193,7 @@ public class UnitStateController : MonoBehaviour
     /// Ally 팔 검정색이 피격 후에도 유지되도록
     /// 마지막에 RefreshBaseColors()를 반드시 호출한다.
     /// </summary>
-    public void SpawnAsAlly()
+    public void SpawnAsAlly(bool startSpawn = false)
     {
         state = UnitState.AllyAlive;
         gameObject.layer = allyLayer;
@@ -212,6 +208,7 @@ public class UnitStateController : MonoBehaviour
         enemyBrain.enabled = false;
         allyBrain.enabled = true;
 
+        combat.DataSetup(unitKey);
         combat.ResetRuntime(fullHeal: true);
         anim.ResetControllerState(true);
 
@@ -222,11 +219,16 @@ public class UnitStateController : MonoBehaviour
 
         playerSquad ??= GameManager.Instance.playerSquad;
         playerSquad.Register(allyBrain);
+
+        if (startSpawn) return;
+
         GameManager.Instance.UnlockUnit(unitKey);
 
         // 이전 효과 취소 후, 현재 아군 시각 상태를 기준값으로 재저장
         visualFeedback?.CancelAllEffectsAndRestore();
         visualFeedback?.RefreshBaseColors();
+
+        SoundManager.Instance.PlaySFX(SFXType.Recruit);
     }
 
     /// <summary>
@@ -330,7 +332,8 @@ public class UnitStateController : MonoBehaviour
 
         OnRequestFadeOutAndRelease?.Invoke();
 
-        GameManager.Instance.AddCoin(1); 
+        GameManager.Instance.AddCoin(1);
+        SoundManager.Instance.PlaySFX(SFXType.GetCoin);
     }
 
     private void OnTriggerEnter2D(Collider2D collision)

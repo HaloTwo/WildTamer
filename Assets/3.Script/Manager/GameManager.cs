@@ -42,6 +42,8 @@ public class GameManager : Singleton<GameManager>
     CombatAgent playerCombat;
     [SerializeField] UnitDataSO[] unitDatas;
 
+    [SerializeField] FieldEnemySpawner[] enemySpawners;
+
 
     UserData userData = new UserData();
     public UserData UserData => userData;
@@ -81,7 +83,11 @@ public class GameManager : Singleton<GameManager>
     {
         LoadGame();
 
+
+        SoundManager.Instance.PlayBGM(BGMType.Field);
+
         playerCombat.PlayerDataSet();
+
         playerSquad.RestoreSavedAllies(userData.currentAllies);
         UIManager.Instance.SetCoinText(userData.coin);
     }
@@ -153,7 +159,6 @@ public class GameManager : Singleton<GameManager>
 
     public void SaveGame()
     {
-        // 저장 직전에 현재 아군 목록 스냅샷 생성
         RebuildCurrentAlliesSnapshot();
 
         SaveManager.Instance.SaveJson(SaveName.PlayerData, userData);
@@ -206,13 +211,4 @@ public class GameManager : Singleton<GameManager>
 #endif
     }
 
-    void OnApplicationFocus(bool focus)
-    {
-#if UNITY_ANDROID || UNITY_IOS
-        if (!focus)
-        {
-            SaveGame();
-        }
-#endif
-    }
 }

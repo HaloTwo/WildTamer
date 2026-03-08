@@ -5,9 +5,16 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+public enum SkillType
+{
+    None,
+    MagicRain,
+    Shockwave
+}
 
 public class CombatAgent : MonoBehaviour
 {
+
     [HideInInspector] public Team team = Team.Enemy;
 
     [Header("플레이어 제외 Bar")]
@@ -26,7 +33,7 @@ public class CombatAgent : MonoBehaviour
 
     [Header("Animation")]
     [SerializeField] Animator anim;
-    readonly string attackTriggerName = "IsAttack"; // Trigger
+    readonly string attackTriggerName = "IsAttack";
 
     [Header("Projectile (optional)")]
     [SerializeField] GameObject projectilePrefab;
@@ -34,6 +41,33 @@ public class CombatAgent : MonoBehaviour
     [SerializeField] float projectileArcHeight = 0.4f;
     [SerializeField] Transform startPoint;
 
+    [Header("Skill")]
+    [SerializeField] SkillType skillType = SkillType.None;
+    [SerializeField] float skillCooldown = 10f;
+    [SerializeField] float skillCastRange = 3f;
+    readonly string skillTriggerName = "IsSkill";
+
+    float nextSkillTime;
+    Transform pendingSkillTarget;
+    public bool IsSkillCasting { get; private set; }
+
+    [Header("Magic Rain")]
+    [SerializeField] float magicRainRadius = 2.5f;
+    [SerializeField] int magicRainMaxTargets = 5;
+    [SerializeField] float magicRainDelay = 0.6f;
+    [SerializeField] float magicRainDamage = 8f;
+
+    [Header("Magic Rain Visual")]
+    [SerializeField] GameObject magicRainProjectilePrefab;
+    [SerializeField] float magicRainFallHeight = 4f;
+    [SerializeField] float magicRainFlightTime = 0.35f;
+
+
+    [Header("Shockwave")]
+    [SerializeField] float shockwaveRadius = 2.2f;
+    [SerializeField] float shockwaveDelay = 0.35f;
+    [SerializeField] float shockwaveDamage = 15f;
+    [SerializeField] GameObject shockwaveFxPrefab;
 
     public float HP { get; private set; }
     public bool IsDead => HP <= 0f;
@@ -44,7 +78,6 @@ public class CombatAgent : MonoBehaviour
 
     static readonly List<CombatAgent> s_all = new();
     public static IReadOnlyList<CombatAgent> All => s_all;
-
 
     void OnEnable()
     {
@@ -60,8 +93,6 @@ public class CombatAgent : MonoBehaviour
     {
         s_all.Remove(this);
     }
-    // ---------------------------------------------------------------------------------
-
 
     public void DataSetup(UnitKey unitKey)
     {
@@ -85,7 +116,6 @@ public class CombatAgent : MonoBehaviour
         ResetRuntime(true);
     }
 
-
     public void SetTeam(Team newTeam) => team = newTeam;
 
     public void ResetRuntime(bool fullHeal = true)
@@ -93,7 +123,15 @@ public class CombatAgent : MonoBehaviour
         pendingTarget = null;
         nextAttackTime = 0f;
 
+        pendingSkillTarget = null;
+        nextSkillTime = 0f;
+
+        IsSkillCasting = false;
+
+        anim.SetBool(skillTriggerName, false);
+
         if (fullHeal) HP = maxHP;
+
 
         if (team.Equals(Team.Player))
         {
@@ -137,8 +175,6 @@ public class CombatAgent : MonoBehaviour
         });
     }
 
-
-
     public void TakeDamage(float amount)
     {
         if (IsDead) return;
@@ -153,10 +189,16 @@ public class CombatAgent : MonoBehaviour
         {
             HP = 0f;
             pendingTarget = null;
+            pendingSkillTarget = null;
+
+            IsSkillCasting = false;
+
+            anim.SetBool(skillTriggerName, false);
 
             hideTween?.Kill();
 
             OnDead?.Invoke(this);
+            SoundManager.Instance.PlaySFX(SFXType.Dead);
 
             if (team.Equals(Team.Player))
             {
@@ -170,7 +212,11 @@ public class CombatAgent : MonoBehaviour
             return;
         }
 
-        if (team.Equals(Team.Player)) UIManager.Instance.SetHpBar(HP, maxHP);
+        if (team.Equals(Team.Player))
+        {
+            UIManager.Instance.SetHpBar(HP, maxHP);
+            SoundManager.Instance.PlaySFX(SFXType.PlayerHit);
+        }
     }
 
     public bool IsInRange(Transform target)
@@ -183,6 +229,7 @@ public class CombatAgent : MonoBehaviour
     public bool TryAttack(Transform target)
     {
         if (IsDead) return false;
+        if (IsSkillCasting) return false;
         if (!target) { pendingTarget = null; return false; }
 
         if (!target.TryGetComponent(out CombatAgent other) || other.IsDead)
@@ -201,7 +248,70 @@ public class CombatAgent : MonoBehaviour
         return true;
     }
 
-    // 근접공격이면 attack 애니 중간에 AnimationEvent로 이거 호출
+    public bool TryUseSkill(Transform target)
+    {
+        if (skillType == SkillType.None) return false;
+        if (IsDead) return false;
+        if (IsSkillCasting) return false;
+        if (!target) { pendingSkillTarget = null; return false; }
+
+        if (!target.TryGetComponent(out CombatAgent other) || other.IsDead)
+            return false;
+
+        if (other.team == team)
+            return false;
+
+        if (!IsSkillInRange(target))
+        {
+            pendingSkillTarget = null;
+            return false;
+        }
+
+        if (Time.time < nextSkillTime)
+            return false;
+
+        nextSkillTime = Time.time + skillCooldown;
+        pendingSkillTarget = target;
+
+        BeginSkillCast();
+
+        switch (skillType)
+        {
+            case SkillType.MagicRain:
+                StartCoroutine(CoMagicRain(target));
+                return true;
+
+            case SkillType.Shockwave:
+                StartCoroutine(CoShockwave());
+                return true;
+        }
+
+        EndSkillCast();
+        return false;
+    }
+    void BeginSkillCast()
+    {
+        IsSkillCasting = true;
+
+        if (anim != null)
+            anim.SetBool(skillTriggerName, true);
+    }
+
+    void EndSkillCast()
+    {
+        IsSkillCasting = false;
+        pendingSkillTarget = null;
+
+        if (anim != null)
+            anim.SetBool(skillTriggerName, false);
+    }
+    public bool IsSkillInRange(Transform target)
+    {
+        if (!target) return false;
+        float r = skillCastRange;
+        return ((Vector2)target.position - (Vector2)transform.position).sqrMagnitude <= r * r;
+    }
+
     public void OnAttackHitEvent()
     {
         if (IsDead) return;
@@ -219,7 +329,6 @@ public class CombatAgent : MonoBehaviour
             return;
         }
 
-        // 원거리면 투사체 발사
         if (projectilePrefab != null)
         {
             if (startPoint == null)
@@ -233,16 +342,158 @@ public class CombatAgent : MonoBehaviour
             return;
         }
 
-        // 근접이면 이벤트 시점에 데미지 적용
         if (!IsInRange(pendingTarget))
         {
-            anim.ResetTrigger(attackTriggerName); 
+            anim.ResetTrigger(attackTriggerName);
             pendingTarget = null;
             return;
         }
 
         other.TakeDamage(damage);
         pendingTarget = null;
+
+        if (team.Equals(Team.Player))
+            SoundManager.Instance.PlaySFX(SFXType.PlayerAttack);
+    }
+
+
+    IEnumerator CoMagicRain(Transform target)
+    {
+        if (target == null)
+        {
+            EndSkillCast();
+            yield break;
+        }
+
+        Vector2 center = target.position;
+        float radiusSqr = magicRainRadius * magicRainRadius;
+
+        List<CombatAgent> hitTargets = new List<CombatAgent>(magicRainMaxTargets);
+        var all = All;
+
+        for (int i = 0; i < all.Count; i++)
+        {
+            CombatAgent other = all[i];
+            if (other == null || other == this || other.IsDead) continue;
+            if (other.team == team) continue;
+
+            Vector2 diff = (Vector2)other.transform.position - center;
+            if (diff.sqrMagnitude > radiusSqr) continue;
+
+            hitTargets.Add(other);
+        }
+
+        hitTargets.Sort((a, b) =>
+        {
+            float da = ((Vector2)a.transform.position - center).sqrMagnitude;
+            float db = ((Vector2)b.transform.position - center).sqrMagnitude;
+            return da.CompareTo(db);
+        });
+
+        int count = Mathf.Min(magicRainMaxTargets, hitTargets.Count);
+
+        yield return new WaitForSeconds(magicRainDelay);
+
+        if (IsDead)
+        {
+            EndSkillCast();
+            yield break;
+        }
+
+        for (int i = 0; i < count; i++)
+        {
+            CombatAgent victim = hitTargets[i];
+            if (victim == null || victim.IsDead) continue;
+            if (victim.team == team) continue;
+
+            StartCoroutine(CoMagicRainHit(victim));
+        }
+
+        EndSkillCast();
+    }
+
+    IEnumerator CoMagicRainHit(CombatAgent victim)
+    {
+        if (victim == null || victim.IsDead) yield break;
+
+        Vector3 hitPos = victim.transform.position;
+        Vector3 startPos = hitPos + Vector3.up * magicRainFallHeight;
+
+        GameObject proj = null;
+
+        if (magicRainProjectilePrefab != null)
+        {
+            proj = ObjectPool.Instance.Get(magicRainProjectilePrefab, startPos, Quaternion.identity);
+        }
+
+        float t = 0f;
+        float dur = Mathf.Max(0.01f, magicRainFlightTime);
+
+        while (t < 1f)
+        {
+            if (victim == null || victim.IsDead) break;
+
+            t += Time.deltaTime / dur;
+
+            Vector3 endPos = victim.transform.position;
+            Vector3 pos = Vector3.Lerp(startPos, endPos, t);
+
+            if (proj != null)
+                proj.transform.position = pos;
+
+            yield return null;
+        }
+
+        if (victim != null && !victim.IsDead && victim.team != team)
+        {
+            victim.TakeDamage(magicRainDamage);
+        }
+
+        if (proj != null)
+            ObjectPool.Instance.Release(proj);
+    }
+
+    IEnumerator CoShockwave()
+    {
+        yield return new WaitForSeconds(shockwaveDelay);
+
+        if (IsDead)
+        {
+            EndSkillCast();
+            yield break;
+        }
+
+        if (shockwaveFxPrefab != null)
+        {
+            GameObject fx = ObjectPool.Instance.Get(shockwaveFxPrefab, transform.position, Quaternion.identity);
+            StartCoroutine(CoReleaseFx(fx, 1f));
+        }
+
+        Vector2 center = transform.position;
+        float radiusSqr = shockwaveRadius * shockwaveRadius;
+
+        var all = All;
+        for (int i = 0; i < all.Count; i++)
+        {
+            CombatAgent other = all[i];
+            if (other == null || other == this || other.IsDead) continue;
+            if (other.team == team) continue;
+
+            Vector2 diff = (Vector2)other.transform.position - center;
+            if (diff.sqrMagnitude > radiusSqr) continue;
+
+            other.TakeDamage(shockwaveDamage);
+        }
+
+        EndSkillCast();
+    }
+
+    IEnumerator CoReleaseFx(GameObject fx, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        if (fx != null)
+            ObjectPool.Instance.Release(fx);
     }
 
     IEnumerator ArcProjectileRoutine(Vector3 start, Transform target)

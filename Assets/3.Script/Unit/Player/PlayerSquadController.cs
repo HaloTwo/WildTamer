@@ -171,7 +171,7 @@ public class PlayerSquadController : MonoBehaviour
             return;
         }
 
-        usc.SpawnAsAlly();
+        usc.SpawnAsAlly(true);
     }
 
 }

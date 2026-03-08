@@ -133,6 +133,10 @@ PrefabInstance:
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 7695309065870355487, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: skillType
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7695309065870355487, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
       propertyPath: startPoint
       value: 
       objectReference: {fileID: 3447598965463145876}
@@ -141,13 +145,29 @@ PrefabInstance:
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 7695309065870355487, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: skillCooldown
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7695309065870355487, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
       propertyPath: attackCooldown
       value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7695309065870355487, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: magicRainDelay
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7695309065870355487, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: magicRainDamage
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 7695309065870355487, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
       propertyPath: projectilePrefab
       value: 
       objectReference: {fileID: 7922748702353619820, guid: 45403cf5c75462a47b3d477b296ed3f4, type: 3}
+    - target: {fileID: 7695309065870355487, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: magicRainProjectilePrefab
+      value: 
+      objectReference: {fileID: 7922748702353619820, guid: fc115d86b5d6bd849a57e376b26ec026, type: 3}
     - target: {fileID: 8319951415880408710, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
       propertyPath: detectRadius
       value: 5

@@ -137,12 +137,32 @@ PrefabInstance:
       value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 7695309065870355487, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: skillType
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7695309065870355487, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
       propertyPath: attackRange
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 7695309065870355487, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
       propertyPath: attackCooldown
       value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7695309065870355487, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: shockwaveDelay
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7695309065870355487, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: skillCastRange
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7695309065870355487, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: shockwaveDamage
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 7695309065870355487, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
+      propertyPath: shockwaveRadius
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 8511560829642676089, guid: ff897e6b0ac73004c8b847fb38b306eb, type: 3}
       propertyPath: m_AnchoredPosition.x

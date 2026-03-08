@@ -29,12 +29,6 @@ public class PlayerBrain : MonoBehaviour
         filter.useTriggers = true;
     }
 
-    private void Start()
-    {
-        combat.PlayerDataSet();
-    }
-
-
 
     void Update()
     {

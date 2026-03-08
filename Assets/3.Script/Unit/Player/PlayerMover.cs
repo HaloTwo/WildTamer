@@ -17,7 +17,7 @@ public class PlayerMover2D : MonoBehaviour
 
     public Vector2 MoveInput => input;
 
-    string isMovingParam = "IsMoving"; // Animator bool 이름
+    string isMovingParam = "IsMoving";
     float facing = 1f;
 
     void Awake()
@@ -33,7 +33,6 @@ public class PlayerMover2D : MonoBehaviour
 
     void Update()
     {
-        // 입력
         if (UIJoyStick.Instance == null || !UIJoyStick.Instance.isDragging)
         {
             input = Vector2.zero;
@@ -44,11 +43,9 @@ public class PlayerMover2D : MonoBehaviour
             input = (dir.magnitude < deadZone) ? Vector2.zero : dir;
         }
 
-        // 이동 애니메이션 (bool)
         bool isMoving = input.sqrMagnitude > 0.0001f;
         if (anim != null) anim.SetBool(isMovingParam, isMoving);
 
-        // 좌/우 플립 (방향이 바뀔 때만 전체 적용)
         if (input.x > 0.01f)
             facing = -1f;
         else if (input.x < -0.01f)
@@ -66,11 +63,14 @@ public class PlayerMover2D : MonoBehaviour
     {
         rb.MovePosition(rb.position + input * speed * Time.fixedDeltaTime);
 
-        // 이동 애니메이션 (bool)
         bool isMoving = input.sqrMagnitude > 0.0001f;
         if (anim != null) anim.SetBool(isMovingParam, isMoving);
     }
 
+    public void PlayFootstep()
+    {
+        if (input.sqrMagnitude <= 0.0001f) return;
 
-
+        SoundManager.Instance.PlayFootstep();
+    }
 }

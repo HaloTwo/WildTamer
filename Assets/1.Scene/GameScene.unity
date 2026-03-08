@@ -1499,7 +1499,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FieldEnemySpawner
   spawnMode: 1
   preset:
-    enemyPrefab: {fileID: 3126187359914517199, guid: c4497cb38ff47604598ae2d019f88a28, type: 3}
+    enemyPrefab: {fileID: 3126187359914517199, guid: 10ed3cfd6a8bf7f45a7803bbb1b2fce9, type: 3}
     minCount: 1
     maxCount: 1
     spawnScatterRadius: 3
@@ -10894,7 +10894,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FieldEnemySpawner
   spawnMode: 1
   preset:
-    enemyPrefab: {fileID: 3126187359914517199, guid: 10ed3cfd6a8bf7f45a7803bbb1b2fce9, type: 3}
+    enemyPrefab: {fileID: 3126187359914517199, guid: c4497cb38ff47604598ae2d019f88a28, type: 3}
     minCount: 1
     maxCount: 1
     spawnScatterRadius: 3
@@ -11561,6 +11561,8 @@ GameObject:
   - component: {fileID: 2070138825}
   - component: {fileID: 2070138822}
   - component: {fileID: 2070138823}
+  - component: {fileID: 2070138828}
+  - component: {fileID: 2070138827}
   m_Layer: 0
   m_Name: GamaManager
   m_TagString: Untagged
@@ -11663,6 +11665,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 1c2599134bafc7b41b0baf6d08a8bc1c, type: 2}
   - {fileID: 11400000, guid: bd4885f9db45a384f9e7b80281bfc5bf, type: 2}
   - {fileID: 11400000, guid: 695811ce10956a14bba567b711c0e963, type: 2}
+  enemySpawners: []
   fpsText: {fileID: 1464417946}
 --- !u!114 &2070138825
 MonoBehaviour:
@@ -11676,6 +11679,117 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7a17dbf17571a3459f4d8632b849277, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+--- !u!82 &2070138827
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2070138819}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
+  m_PlayOnAwake: 1
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+--- !u!114 &2070138828
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2070138819}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8fe2001d4176ed64683588b0632c623d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  bgmSource: {fileID: 2070138827}
+  sfxPoolSize: 10
 --- !u!1 &2075092291
 GameObject:
   m_ObjectHideFlags: 0
