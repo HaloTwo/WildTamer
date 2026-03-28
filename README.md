@@ -36,19 +36,19 @@
 ## 🔧 Core Systems (Code Reference)
 
 - Squad Controller  
-→ `PlayerSquadController.cs`
+→ [`PlayerSquadController.cs`](https://github.com/HaloTwo/WildTamer/blob/main/Assets/3.Script/Unit/Player/PlayerSquadController.cs)
 
 - Ally AI  
-→ `AllyBrain.cs`
+→ [`AllyBrain.cs`](https://github.com/HaloTwo/WildTamer/blob/main/Assets/3.Script/Unit/AllyBrain.cs)
 
 - Monster AI  
-→ `EnemyBrain.cs`
+→ [`EnemyBrain.cs`](https://github.com/HaloTwo/WildTamer/blob/main/Assets/3.Script/Unit/EnemyBrain.cs)
 
 - Object Pool System  
-→ `ObjectPool.cs`
+→ [`ObjectPool.cs`](https://github.com/HaloTwo/WildTamer/blob/main/Assets/3.Script/Manager/ObjectPool.cs)
 
 - Minimap Fog System  
-→ `MiniMapFog_WorldAccum.cs`
+→ [`MiniMapFog_WorldAccum.cs`](https://github.com/HaloTwo/WildTamer/blob/main/Assets/3.Script/MiniMapFog_WorldAccum.cs)
 
 ---
 
