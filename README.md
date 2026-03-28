@@ -1,4 +1,4 @@
-# 🐺 Wild Tamer Inspired Prototype (Unity 2D)
+# Wild Tamer Inspired Prototype (Unity 2D)
 
 111퍼센트의 **Wild Tamer**를 참고하여 제작한  
 군집 기반 테이밍 RPG **프로토타입 프로젝트**입니다.
@@ -20,7 +20,7 @@
 
 ---
 
-## 🧠 핵심 구현 요소
+## 핵심 구현 요소
 
 - 플레이어를 중심으로 이동하는 **Squad 기반 동료 시스템**
 - 야생 몬스터와 부대 간 **자동 전투 시스템**
